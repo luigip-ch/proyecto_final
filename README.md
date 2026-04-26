@@ -23,6 +23,12 @@ Desarrollar e implementar modelos de Machine Learning orientados al análisis de
 
 Modelos de Machine Learning para analizar series históricas y generar combinaciones que cumplan reglas de oro de distribución estadística. Optimiza balances entre pares e impares y sumas totales frecuentes.
 
+### Restricciones
+
+- El análisis se enfoca exclusivamente en los **números ganadores del premio mayor** de las loterias.
+- Se excluyen premios secundarios o categorías de premios menores.
+- Los modelos se entrenan y validan únicamente con datos de premios mayores para asegurar la relevancia y calidad de las predicciones.
+
 ## Beneficios Esperados
 
 Los beneficios del proyecto se pueden entender en tres niveles:
