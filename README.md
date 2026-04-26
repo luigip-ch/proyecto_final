@@ -35,6 +35,36 @@ Los beneficios del proyecto se pueden entender en tres niveles:
 
 Adicionalmente, el modelo es escalable y adaptable, permitiendo su actualización con nuevos datos y su aplicación en contextos similares. Contribuye también a la reducción de sesgos humanos en la selección de combinaciones, promoviendo decisiones más objetivas y alineadas con comportamientos observados en los datos.
 
+## Arquitectura
+
+La aplicación **ML Predictora de Números de Loterias** está estructurada en cuatro capas principales:
+
+### 1. **Frontend (React)**
+- Interfaz de usuario responsable de la selección de loterias
+- Visualización de resultados y predicciones
+- Comunicación con el backend mediante API REST
+
+### 2. **Backend (Python)**
+- **Selector:** Componente que gestiona la selección de loterias y coordina las predicciones
+- **Entrenar Modelos:** Módulo responsable del entrenamiento de los modelos de ML con datos históricos
+- **Scraper:** Herramienta para la recopilación automática de datos históricos de las loterias
+
+### 3. **ML Layer (Python)**
+- Modelos de Machine Learning especializados para cada loteria
+- Análisis de series históricas y generación de predicciones
+- Implementación de reglas de optimización estadística (balance par/impar, rangos de suma)
+
+### 4. **BD Layer**
+- Almacenamiento de datos históricos por loteria (Loteria 1, Loteria 2, ..., Loteria n)
+- Gestión de archivos de datos para lectura y entrenamiento
+
+**Flujos principales:**
+- **Predicción:** Usuario → Frontend → Selector → Modelos ML → Resultados
+- **Entrenamiento:** Scraper → Backend → Entrenar Modelos → ML Layer
+- **Datos:** Archivos históricos ← Scraper (actualización automática)
+
+![Arquitectura de la APP](./images/architecture.png)
+
 ## Stakeholders
 
 - Lina Paola Soto Montes
