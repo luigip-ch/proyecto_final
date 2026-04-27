@@ -1,2 +1,20 @@
 .claude
 .DS_Store
+
+# Entorno
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Tests
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Docker
+*.log
