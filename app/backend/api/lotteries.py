@@ -1,3 +1,5 @@
+"""Expone el endpoint que lista las loterías disponibles en la API."""
+
 from fastapi import APIRouter
 
 from app.backend.selector import list_lotteries
@@ -8,6 +10,12 @@ router = APIRouter(prefix="/api")
 
 @router.get("/lotteries")
 def lotteries() -> dict:
+    """
+    Lista las loterías disponibles para predicción y entrenamiento.
+
+    Returns:
+        Diccionario con los slugs internos y nombres legibles registrados.
+    """
     items = [
         {
             "id": key,

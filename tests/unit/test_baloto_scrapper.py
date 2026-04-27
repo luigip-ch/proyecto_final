@@ -1,3 +1,5 @@
+"""Valida el parsing, scraping y persistencia CSV del scraper de Baloto."""
+
 import csv
 import pytest
 from unittest.mock import MagicMock, patch

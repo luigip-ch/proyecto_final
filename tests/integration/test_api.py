@@ -1,3 +1,5 @@
+"""Valida el comportamiento integrado de los endpoints HTTP de la API."""
+
 import pytest
 import pytest_asyncio
 from unittest.mock import MagicMock, patch

@@ -1,3 +1,5 @@
+"""Extrae, transforma y guarda resultados históricos públicos de Baloto."""
+
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -18,6 +20,16 @@ def parse_resultado(texto):
 
 
 def obtener_pagina(page):
+    """
+    Descarga y parsea una página de resultados históricos de Baloto.
+
+    Args:
+        page: Número de página del paginador público de resultados.
+
+    Returns:
+        Objeto ``BeautifulSoup`` si la respuesta HTTP fue exitosa; de lo
+        contrario ``None``.
+    """
     url = f"{BASE_URL}?page={page}"
 
     headers = {
@@ -33,6 +45,16 @@ def obtener_pagina(page):
 
 
 def extraer_resultados(soup):
+    """
+    Extrae registros de sorteo desde una tabla HTML de resultados.
+
+    Args:
+        soup: Documento HTML parseado con ``BeautifulSoup``.
+
+    Returns:
+        Lista de diccionarios con fecha, cinco números principales y
+        superbalota.
+    """
     data = []
 
     filas = soup.find_all("tr")
@@ -63,6 +85,15 @@ def extraer_resultados(soup):
 
 
 def scrapear_historico(max_paginas=200):
+    """
+    Recorre páginas de resultados hasta construir el histórico disponible.
+
+    Args:
+        max_paginas: Límite superior de páginas a consultar.
+
+    Returns:
+        Lista acumulada de resultados extraídos desde el sitio de Baloto.
+    """
     dataset = []
 
     for page in range(1, max_paginas + 1):
@@ -87,6 +118,13 @@ def scrapear_historico(max_paginas=200):
 
 
 def guardar_csv(data, filename="baloto_historico.csv"):
+    """
+    Persiste los resultados históricos de Baloto en un archivo CSV.
+
+    Args:
+        data: Iterable de diccionarios con las claves esperadas por el CSV.
+        filename: Ruta o nombre del archivo de salida.
+    """
     keys = ["fecha", "n1", "n2", "n3", "n4", "n5", "superbalota"]
 
     with open(filename, mode="w", newline="", encoding="utf-8") as f:

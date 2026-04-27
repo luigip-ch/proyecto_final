@@ -1,3 +1,5 @@
+"""Expone el endpoint de predicción para los modelos de lotería."""
+
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
@@ -11,6 +13,21 @@ router = APIRouter(prefix="/api")
 
 @router.post("/predict")
 def predict(req: LotteryRequest) -> dict:
+    """
+    Genera una predicción para la lotería solicitada.
+
+    Carga y entrena el modelo en la misma petición antes de producir la
+    respuesta normalizada de la API.
+
+    Args:
+        req: Payload con el slug de la lotería.
+
+    Returns:
+        Diccionario con predicción, estadísticas derivadas y timestamp UTC.
+
+    Raises:
+        HTTPException: con estado 404 si la lotería no está registrada.
+    """
     try:
         model = get_model(req.lottery)
     except ValueError as exc:

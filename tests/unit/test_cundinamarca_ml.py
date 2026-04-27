@@ -1,3 +1,5 @@
+"""Valida carga, entrenamiento y predicción del modelo de Cundinamarca."""
+
 import pytest
 from unittest.mock import patch
 import pandas as pd

@@ -1,3 +1,5 @@
+"""Configura y expone la aplicación FastAPI principal del proyecto."""
+
 from fastapi import FastAPI
 
 from app.backend.api.health import router as health_router
