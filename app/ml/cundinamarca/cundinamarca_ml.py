@@ -1,13 +1,13 @@
 import os
+
 import numpy as np
 import pandas as pd
 
+from app.config import BASE_DATA_DIR, PRIZE_TYPE_FILTER
 from app.ml.base_model import BaseModel
 
 _DEFAULT_DATA_PATH = os.path.join(
-    os.path.dirname(__file__),
-    "..", "..", "bd", "historical",
-    "loteria_cundinamarca", "cundinamarca_historico.csv",
+    BASE_DATA_DIR, "loteria_cundinamarca", "cundinamarca_historico.csv"
 )
 
 
@@ -31,7 +31,7 @@ class CundinamarcaModel(BaseModel):
             raise FileNotFoundError(f"Archivo de datos no encontrado: {self.data_path}")
 
         df = pd.read_csv(self.data_path)
-        self.df = df[df["Tipo de Premio"] == "Mayor"].copy()
+        self.df = df[df["Tipo de Premio"] == PRIZE_TYPE_FILTER].copy()
 
     def train(self) -> None:
         if self.df is None:
@@ -57,12 +57,13 @@ class CundinamarcaModel(BaseModel):
         decenas   = self._sample(rng, self.frecuencias["decenas"])
         unidades  = self._sample(rng, self.frecuencias["unidades"])
 
-        numero = miles * 1000 + centenas * 100 + decenas * 10 + unidades
-
+        # Retornamos los 4 dígitos por separado para preservar los ceros a la
+        # izquierda. Combinar en un entero (ej. 0048 → 48) perdía las cifras
+        # de orden mayor cuando miles o centenas eran 0.
         series = self.df["Numero serie ganadora"].astype(int).values
         serie = int(rng.choice(series))
 
-        return [numero, serie]
+        return [miles, centenas, decenas, unidades, serie]
 
     # ── helpers ──────────────────────────────────────────────────────────────
 
