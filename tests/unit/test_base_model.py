@@ -1,3 +1,5 @@
+"""Valida el contrato abstracto que deben cumplir los modelos ML."""
+
 import pytest
 from app.ml.base_model import BaseModel
 

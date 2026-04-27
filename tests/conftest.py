@@ -1,3 +1,5 @@
+"""Define fixtures compartidas por las pruebas unitarias e integración."""
+
 import pytest
 from app.ml.base_model import BaseModel
 

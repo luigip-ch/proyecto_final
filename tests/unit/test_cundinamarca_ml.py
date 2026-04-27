@@ -1,3 +1,5 @@
+"""Valida carga, entrenamiento y predicción del modelo de Cundinamarca."""
+
 import pytest
 from unittest.mock import patch
 import pandas as pd
@@ -100,23 +102,35 @@ class TestCundinamarcaModelPredict:
         result = model_with_data.predict()
         assert isinstance(result, list)
 
-    def test_predict_returns_two_elements(self, model_with_data):
+    def test_predict_returns_five_elements(self, model_with_data):
+        """[miles, centenas, decenas, unidades, serie] — 5 enteros separados."""
         model_with_data.load_data()
         model_with_data.train()
         result = model_with_data.predict()
-        assert len(result) == 2
+        assert len(result) == 5
 
-    def test_predict_numero_is_four_digits(self, model_with_data):
+    def test_predict_digits_are_single_digits(self, model_with_data):
+        """Cada posición del número (miles..unidades) es un dígito 0–9."""
         model_with_data.load_data()
         model_with_data.train()
-        numero, _ = model_with_data.predict()
-        assert 0 <= numero <= 9999
+        miles, centenas, decenas, unidades, _ = model_with_data.predict()
+        for digit in (miles, centenas, decenas, unidades):
+            assert 0 <= digit <= 9
 
-    def test_predict_serie_is_valid(self, model_with_data):
+    def test_predict_leading_zero_preserved(self, model_with_data):
+        """Los dígitos no se combinan en un entero — leading zeros no se pierden."""
         model_with_data.load_data()
         model_with_data.train()
-        _, serie = model_with_data.predict()
-        assert 0 <= serie <= 299
+        result = model_with_data.predict(seed=0)
+        assert all(isinstance(d, int) for d in result[:4])
+        assert all(0 <= d <= 9 for d in result[:4])
+
+    def test_predict_serie_range_up_to_three_digits(self, model_with_data):
+        """La serie puede ser hasta 3 cifras (0–999)."""
+        model_with_data.load_data()
+        model_with_data.train()
+        *_, serie = model_with_data.predict()
+        assert 0 <= serie <= 999
 
     def test_predict_is_deterministic_with_seed(self, model_with_data):
         model_with_data.load_data()

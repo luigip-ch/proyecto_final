@@ -1,15 +1,32 @@
-import os
-from fastapi import FastAPI
-from dotenv import load_dotenv
+"""Configura y expone la aplicación FastAPI principal del proyecto."""
 
-load_dotenv()
+from fastapi import FastAPI
+
+from app.backend.api.health import router as health_router
+from app.backend.api.lotteries import router as lotteries_router
+from app.backend.api.predict import router as predict_router
+from app.backend.api.train import router as train_router
+from app.config import ENV, PORT
 
 app = FastAPI(
-    docs_url="/docs" if os.getenv("ENV") == "development" else None,
+    docs_url="/docs" if ENV == "development" else None,
     redoc_url=None,
 )
 
+app.include_router(health_router)
+app.include_router(lotteries_router)
+app.include_router(predict_router)
+app.include_router(train_router)
 
-@app.get("/health")
-def health():
-    return {"status": "ok", "version": "1.0.0"}
+
+# ── Entry point ───────────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=PORT,
+        reload=ENV == "development",
+    )

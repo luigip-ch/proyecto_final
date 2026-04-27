@@ -1,3 +1,5 @@
+"""Valida el registro y selector de modelos de lotería disponibles."""
+
 import pytest
 
 from app.backend.selector import REGISTRY, get_model, list_lotteries
