@@ -1,30 +1,41 @@
-# API Specification — NEXLOT
+# API Specification - Proyecto Final
 
-**Base URL:** `http://localhost:9002`  
-**Prefijo de endpoints:** `/api/`  
-**Formato:** JSON  
-**Versión:** 1.0.0
+**Base URL:** `http://localhost:9002`
+**Formato:** JSON
+**Version:** `1.0.0`
 
-> Todos los endpoints bajo `/api/` son consumidos exclusivamente por el frontend. No están expuestos públicamente. Swagger disponible solo en `ENV=development` en `/docs`.
+> Los endpoints de negocio usan el prefijo `/api/`. El endpoint `/health`
+> queda fuera del prefijo porque lo usa el healthcheck del contenedor.
+> Swagger UI esta disponible en `/docs` solo cuando `ENV=development`.
 
 ---
 
-## Índice
+## Estado actual
 
-- [GET /health](#get-health)
-- [GET /api/lotteries](#get-apilotteries)
-- [POST /api/predict](#post-apipredict)
-- [POST /api/train](#post-apitrain)
-- [GET /api/train/{job\_id}/status](#get-apitrainjob_idstatus)
-- [POST /api/scrape](#post-apiscrape)
-- [Códigos de error estándar](#códigos-de-error-estándar)
-- [Reglas de implementación transversales](#reglas-de-implementación-transversales)
+La API implementada actualmente expone solo estos endpoints:
+
+- `GET /health`
+- `GET /api/lotteries`
+- `POST /api/predict`
+- `POST /api/train`
+- `GET /api/train/{job_id}/status`
+
+No existe un endpoint HTTP para scraping. El modulo `app/backend/scrapper.py`
+es una utilidad especifica para Baloto y no aplica automaticamente a las demas
+loterias. Cundinamarca usa el CSV historico disponible en
+`app/bd/historical/loteria_cundinamarca/cundinamarca_historico.csv`.
+
+La unica loteria registrada en la API hoy es:
+
+```json
+["cundinamarca"]
+```
 
 ---
 
 ## GET /health
 
-Verificación de estado del contenedor. Usado por Docker y monitoreo. No requiere autenticación.
+Verifica que el servicio este activo.
 
 ### Response `200 OK`
 
@@ -39,7 +50,8 @@ Verificación de estado del contenedor. Usado por Docker y monitoreo. No requier
 
 ## GET /api/lotteries
 
-Retorna la lista de loterias disponibles con toda la metadata necesaria para el frontend. El frontend construye el selector dinámicamente a partir de esta respuesta — ningún valor está hardcodeado en el frontend.
+Retorna la lista de loterias registradas en el `REGISTRY`. El frontend puede
+usar esta respuesta para construir el selector dinamicamente.
 
 ### Response `200 OK`
 
@@ -48,75 +60,26 @@ Retorna la lista de loterias disponibles con toda la metadata necesaria para el 
   "lotteries": [
     {
       "id": "cundinamarca",
-      "name": "Lotería de Cundinamarca",
-      "short_name": "Cundinamarca",
-      "draw_days": ["lunes"],
-      "next_draw_date": "2024-05-27",
-      "number_config": {
-        "main_count": 4,
-        "main_min": 0,
-        "main_max": 9999,
-        "has_special": false,
-        "special_min": null,
-        "special_max": null
-      },
-      "ui": {
-        "primary_color": "#00E5CC",
-        "special_number_color": null,
-        "icon": "cundinamarca"
-      },
-      "model_status": "ready"
-    },
-    {
-      "id": "baloto",
-      "name": "Baloto",
-      "short_name": "Baloto",
-      "draw_days": ["miércoles", "sábado"],
-      "next_draw_date": "2024-05-25",
-      "number_config": {
-        "main_count": 5,
-        "main_min": 1,
-        "main_max": 43,
-        "has_special": true,
-        "special_min": 1,
-        "special_max": 16
-      },
-      "ui": {
-        "primary_color": "#00E5CC",
-        "special_number_color": "#E11D48",
-        "icon": "baloto"
-      },
-      "model_status": "ready"
+      "name": "Lotería de Cundinamarca"
     }
   ]
 }
 ```
 
-### Descripción de campos
+### Campos
 
-| Campo | Tipo | Descripción |
+| Campo | Tipo | Descripcion |
 |---|---|---|
-| `id` | `string` | Slug único de la lotería — usado en todos los demás endpoints |
-| `name` | `string` | Nombre oficial completo |
-| `short_name` | `string` | Nombre corto para UI compacta |
-| `draw_days` | `string[]` | Días de sorteo en español, minúsculas |
-| `next_draw_date` | `string` | Fecha ISO 8601 (`YYYY-MM-DD`) del próximo sorteo — usada para el countdown |
-| `number_config.main_count` | `int` | Cantidad de números principales a generar |
-| `number_config.main_min` | `int` | Valor mínimo del rango principal |
-| `number_config.main_max` | `int` | Valor máximo del rango principal |
-| `number_config.has_special` | `bool` | Si la lotería tiene número especial/balota |
-| `number_config.special_min` | `int\|null` | Rango mínimo del número especial (`null` si `has_special: false`) |
-| `number_config.special_max` | `int\|null` | Rango máximo del número especial (`null` si `has_special: false`) |
-| `ui.primary_color` | `string` | Color hex para elementos de marca de esta lotería en el frontend |
-| `ui.special_number_color` | `string\|null` | Color hex del número especial — `null` si no aplica |
-| `ui.icon` | `string` | Identificador del ícono SVG de la lotería |
-| `model_status` | `string` | Estado del modelo: `ready` \| `training` \| `not_trained` |
+| `lotteries` | `array` | Lista de loterias disponibles |
+| `lotteries[].id` | `string` | Slug interno usado en `/api/predict` y `/api/train` |
+| `lotteries[].name` | `string` | Nombre legible para mostrar en UI |
 
 ---
 
 ## POST /api/predict
 
-Genera una combinación de números para la lotería indicada usando el modelo ML correspondiente.
+Genera una prediccion para la loteria indicada. La implementacion actual carga
+datos, entrena el modelo y predice en la misma solicitud.
 
 ### Request Body
 
@@ -126,92 +89,77 @@ Genera una combinación de números para la lotería indicada usando el modelo M
 }
 ```
 
-| Campo | Tipo | Requerido | Descripción |
+| Campo | Tipo | Requerido | Descripcion |
 |---|---|---|---|
-| `lottery` | `string` | Sí | ID de la lotería (debe existir en el REGISTRY) |
+| `lottery` | `string` | Si | Slug de una loteria registrada |
 
-### Response `200 OK` — Lotería sin número especial
+### Response `200 OK`
 
 ```json
 {
   "lottery": "cundinamarca",
   "prediction": {
-    "main_numbers": [3, 17, 42, 68],
-    "special_number": null
+    "main_numbers": [0, 4, 7, 1],
+    "special_number": null,
+    "serie": "153"
   },
   "statistics": {
     "even_count": 2,
     "odd_count": 2,
     "even_odd_ratio": "2:2",
-    "sum": 130,
+    "sum": 12,
     "sum_in_optimal_range": true,
     "optimal_sum_range": {
-      "min": 100,
-      "max": 160
+      "min": 10,
+      "max": 26
     },
-    "frequency_score": 0.74,
-    "pattern_score": 0.81
+    "frequency_score": 0.0,
+    "pattern_score": 0.0
   },
-  "generated_at": "2024-05-25T10:30:00Z"
+  "generated_at": "2024-05-27T10:30:00Z"
 }
 ```
 
-### Response `200 OK` — Lotería con número especial (ej. Baloto)
+### Campos
 
-```json
-{
-  "lottery": "baloto",
-  "prediction": {
-    "main_numbers": [7, 14, 23, 31, 42],
-    "special_number": 5
-  },
-  "statistics": {
-    "even_count": 2,
-    "odd_count": 3,
-    "even_odd_ratio": "2:3",
-    "sum": 117,
-    "sum_in_optimal_range": true,
-    "optimal_sum_range": {
-      "min": 85,
-      "max": 150
-    },
-    "frequency_score": 0.68,
-    "pattern_score": 0.77
-  },
-  "generated_at": "2024-05-25T10:30:00Z"
-}
-```
-
-### Descripción de campos
-
-| Campo | Tipo | Descripción |
+| Campo | Tipo | Descripcion |
 |---|---|---|
-| `prediction.main_numbers` | `int[]` | Números principales ordenados de menor a mayor |
-| `prediction.special_number` | `int\|null` | Número especial — `null` si la lotería no tiene |
-| `statistics.even_count` | `int` | Cantidad de números pares en la predicción |
-| `statistics.odd_count` | `int` | Cantidad de números impares en la predicción |
-| `statistics.even_odd_ratio` | `string` | Relación pares:impares — regla de oro del modelo |
-| `statistics.sum` | `int` | Suma total de los números principales |
-| `statistics.sum_in_optimal_range` | `bool` | Si la suma cae en el rango estadísticamente frecuente |
-| `statistics.optimal_sum_range.min` | `int` | Límite inferior del rango de suma validado históricamente |
-| `statistics.optimal_sum_range.max` | `int` | Límite superior del rango de suma validado históricamente |
-| `statistics.frequency_score` | `float` | Score 0.00–1.00: frecuencia histórica de estos números |
-| `statistics.pattern_score` | `float` | Score 0.00–1.00: coherencia del patrón con el modelo entrenado |
-| `generated_at` | `string` | Timestamp ISO 8601 de generación |
+| `lottery` | `string` | Slug enviado en el request |
+| `prediction.main_numbers` | `int[4]` | Digitos del numero ganador en orden miles, centenas, decenas, unidades |
+| `prediction.special_number` | `int|null` | Siempre `null` para Cundinamarca en la implementacion actual |
+| `prediction.serie` | `string` | Serie con cero-padding a 3 caracteres |
+| `statistics.even_count` | `int` | Cantidad de digitos pares |
+| `statistics.odd_count` | `int` | Cantidad de digitos impares |
+| `statistics.even_odd_ratio` | `string` | Relacion pares:impares |
+| `statistics.sum` | `int` | Suma de los 4 digitos principales |
+| `statistics.sum_in_optimal_range` | `bool` | `true` si la suma esta entre `10` y `26` |
+| `statistics.optimal_sum_range.min` | `int` | Limite inferior del rango optimo (`10`) |
+| `statistics.optimal_sum_range.max` | `int` | Limite superior del rango optimo (`26`) |
+| `statistics.frequency_score` | `float` | Actualmente `0.0`; reservado para evolucion del modelo |
+| `statistics.pattern_score` | `float` | Actualmente `0.0`; reservado para evolucion del modelo |
+| `generated_at` | `string` | Timestamp UTC con formato `YYYY-MM-DDTHH:MM:SSZ` |
 
 ### Errores
 
-| Código HTTP | `code` | Condición |
+| HTTP | Causa | Forma actual |
 |---|---|---|
-| `400` | `INVALID_REQUEST` | Campo `lottery` ausente o vacío |
-| `404` | `LOTTERY_NOT_FOUND` | Lotería no registrada en el REGISTRY |
-| `409` | `MODEL_NOT_TRAINED` | Modelo de esa lotería sin entrenar |
+| `422` | Falta `lottery` o el body no cumple el schema Pydantic | Error de validacion de FastAPI |
+| `404` | La loteria no existe en el `REGISTRY` | `{"detail": "..."} ` |
+
+Ejemplo `404`:
+
+```json
+{
+  "detail": "'invalida': lotería no registrada. Disponibles: ['cundinamarca']"
+}
+```
 
 ---
 
 ## POST /api/train
 
-Dispara el entrenamiento del modelo para una lotería. Operación asíncrona — responde de inmediato con un `job_id` y el entrenamiento corre en background.
+Encola el entrenamiento del modelo para una loteria. La tarea corre como
+`BackgroundTask` de FastAPI y el estado se guarda en memoria del proceso.
 
 ### Request Body
 
@@ -221,194 +169,82 @@ Dispara el entrenamiento del modelo para una lotería. Operación asíncrona —
 }
 ```
 
-| Campo | Tipo | Requerido | Descripción |
+| Campo | Tipo | Requerido | Descripcion |
 |---|---|---|---|
-| `lottery` | `string` | Sí | ID de la lotería |
+| `lottery` | `string` | Si | Slug de una loteria registrada |
 
 ### Response `202 Accepted`
 
 ```json
 {
-  "job_id": "train_cundinamarca_20240525_103000",
-  "lottery": "cundinamarca",
+  "job_id": "e1e3c00c-febf-469a-b081-c7d2b2270f7c",
   "status": "queued",
-  "started_at": "2024-05-25T10:30:00Z",
-  "message": "Entrenamiento iniciado. Consulta el estado en /api/train/train_cundinamarca_20240525_103000/status"
+  "lottery": "cundinamarca"
 }
 ```
 
+### Campos
+
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `job_id` | `string` | UUID generado para el trabajo |
+| `status` | `string` | Estado inicial: `queued` |
+| `lottery` | `string` | Loteria solicitada |
+
 ### Errores
 
-| Código HTTP | `code` | Condición |
+| HTTP | Causa | Forma actual |
 |---|---|---|
-| `400` | `INVALID_REQUEST` | Campo `lottery` ausente |
-| `404` | `LOTTERY_NOT_FOUND` | Lotería no registrada |
-| `409` | `TRAINING_IN_PROGRESS` | Ya hay un job de entrenamiento activo para esa lotería |
+| `422` | Falta `lottery` o el body no cumple el schema Pydantic | Error de validacion de FastAPI |
+| `404` | La loteria no existe en el `REGISTRY` | `{"detail": "..."} ` |
 
 ---
 
-## GET /api/train/{job\_id}/status
+## GET /api/train/{job_id}/status
 
-Consulta el estado de un job de entrenamiento. El frontend hace polling a este endpoint para actualizar la UI durante el proceso.
+Consulta el estado de un trabajo creado por `POST /api/train`.
 
 ### Path Parameter
 
-| Parámetro | Tipo | Descripción |
+| Parametro | Tipo | Descripcion |
 |---|---|---|
-| `job_id` | `string` | ID retornado por `POST /api/train` |
+| `job_id` | `string` | UUID retornado por `POST /api/train` |
 
-### Response `200 OK` — En progreso
-
-```json
-{
-  "job_id": "train_cundinamarca_20240525_103000",
-  "lottery": "cundinamarca",
-  "status": "running",
-  "progress_pct": 45,
-  "started_at": "2024-05-25T10:30:00Z",
-  "estimated_completion": "2024-05-25T10:35:00Z"
-}
-```
-
-### Response `200 OK` — Completado
+### Response `200 OK`
 
 ```json
 {
-  "job_id": "train_cundinamarca_20240525_103000",
-  "lottery": "cundinamarca",
+  "job_id": "e1e3c00c-febf-469a-b081-c7d2b2270f7c",
   "status": "completed",
-  "progress_pct": 100,
-  "started_at": "2024-05-25T10:30:00Z",
-  "completed_at": "2024-05-25T10:34:22Z",
-  "estimated_completion": null,
-  "metrics": {
-    "records_trained": 1248,
-    "model_accuracy": 0.83
-  }
-}
-```
-
-### Response `200 OK` — Fallido
-
-```json
-{
-  "job_id": "train_cundinamarca_20240525_103000",
   "lottery": "cundinamarca",
-  "status": "failed",
-  "progress_pct": 12,
-  "started_at": "2024-05-25T10:30:00Z",
-  "completed_at": null,
-  "estimated_completion": null,
-  "failed_at": "2024-05-25T10:31:05Z",
-  "error": "Datos históricos insuficientes para entrenar el modelo"
+  "error": null
 }
 ```
 
-### Valores de `status`
+### Campos
 
-| Valor | Descripción |
-|---|---|
-| `queued` | En cola, aún no inició |
-| `running` | Ejecutando |
-| `completed` | Finalizado con éxito |
-| `failed` | Falló — ver campo `error` |
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `job_id` | `string` | UUID del trabajo |
+| `status` | `string` | Estado actual: `queued`, `running`, `completed` o `failed` |
+| `lottery` | `string` | Loteria asociada al trabajo |
+| `error` | `string|null` | Mensaje de error si el trabajo fallo; `null` en caso contrario |
 
 ### Errores
 
-| Código HTTP | `code` | Condición |
+| HTTP | Causa | Forma actual |
 |---|---|---|
-| `404` | `JOB_NOT_FOUND` | `job_id` no existe |
+| `404` | El `job_id` no existe en el registro en memoria | `{"detail": "job '<id>' no encontrado"}` |
 
 ---
 
-## POST /api/scrape
+## Notas de implementacion
 
-Dispara la actualización de datos históricos para una lotería. Operación asíncrona con el mismo patrón de polling que `/api/train`.
-
-### Request Body
-
-```json
-{
-  "lottery": "cundinamarca"
-}
-```
-
-### Response `202 Accepted`
-
-```json
-{
-  "job_id": "scrape_cundinamarca_20240525_103000",
-  "lottery": "cundinamarca",
-  "status": "queued",
-  "started_at": "2024-05-25T10:30:00Z"
-}
-```
-
-### Response de estado completado
-
-```json
-{
-  "job_id": "scrape_cundinamarca_20240525_103000",
-  "lottery": "cundinamarca",
-  "status": "completed",
-  "progress_pct": 100,
-  "started_at": "2024-05-25T10:30:00Z",
-  "completed_at": "2024-05-25T10:30:45Z",
-  "estimated_completion": null,
-  "metrics": {
-    "new_records": 12,
-    "total_records": 1260,
-    "file_updated": "bd/historical/cundinamarca/cundinamarca.csv"
-  }
-}
-```
-
-> El estado del scrape se consulta en `GET /api/scrape/{job_id}/status` con la misma estructura que el endpoint de entrenamiento.
-
-### Errores
-
-| Código HTTP | `code` | Condición |
-|---|---|---|
-| `400` | `INVALID_REQUEST` | Campo `lottery` ausente |
-| `404` | `LOTTERY_NOT_FOUND` | Lotería no registrada |
-| `409` | `SCRAPE_IN_PROGRESS` | Ya hay un job de scraping activo para esa lotería |
-
----
-
-## Códigos de error estándar
-
-Todos los errores siguen la misma estructura. En `ENV=production` los mensajes nunca exponen detalles internos del sistema.
-
-```json
-{
-  "error": {
-    "code": "LOTTERY_NOT_FOUND",
-    "message": "La lotería 'xxx' no está disponible",
-    "status": 404
-  }
-}
-```
-
-| HTTP | `code` | Descripción |
-|---|---|---|
-| `400` | `INVALID_REQUEST` | Body malformado o campo requerido ausente |
-| `404` | `LOTTERY_NOT_FOUND` | Lotería no registrada en el REGISTRY |
-| `404` | `JOB_NOT_FOUND` | Job ID no existe |
-| `409` | `MODEL_NOT_TRAINED` | Predicción solicitada con modelo sin entrenar |
-| `409` | `TRAINING_IN_PROGRESS` | Ya hay un job de entrenamiento activo |
-| `409` | `SCRAPE_IN_PROGRESS` | Ya hay un job de scraping activo |
-| `429` | `RATE_LIMIT_EXCEEDED` | Demasiadas solicitudes |
-| `500` | `INTERNAL_ERROR` | Error interno — log completo en servidor, mensaje genérico al cliente |
-
----
-
-## Reglas de implementación transversales
-
-1. **`lottery` siempre es el ID slug** (`cundinamarca`, `baloto`) — nunca el nombre completo
-2. **`main_numbers` siempre ordenados** de menor a mayor
-3. **Fechas siempre en ISO 8601** — fecha: `YYYY-MM-DD` / timestamp: `YYYY-MM-DDTHH:MM:SSZ`
-4. **Scores siempre entre 0.00 y 1.00** con dos decimales
-5. **`null` explícito** para campos opcionales ausentes — nunca omitir el campo
-6. **`model_status`** en `/api/lotteries` refleja el estado real del modelo en el momento de la consulta
-7. **Toda nueva lotería** que se agregue al REGISTRY debe implementar exactamente estos campos — este documento es el contrato del estándar
-8. **`job_id` sigue el patrón** `{operacion}_{loteria}_{YYYYMMDD}_{HHMMSS}` — ej. `train_baloto_20240525_143000`
+1. `lottery` siempre es el slug registrado, por ejemplo `cundinamarca`.
+2. La API actual de prediccion esta normalizada para loterias de 4 cifras con serie.
+3. Los primeros 4 valores de `main_numbers` son digitos individuales, no un entero compuesto.
+4. La serie se devuelve como string de 3 caracteres con cero-padding.
+5. `job_id` es un UUID, no sigue un patron basado en fecha.
+6. Los trabajos de entrenamiento se guardan en memoria; se pierden si el proceso reinicia.
+7. Los errores usan la forma nativa de FastAPI (`detail` y errores `422` de Pydantic), no un wrapper `error.code`.
+8. El scraping no esta expuesto como API y, en el codigo actual, solo existe como utilidad para Baloto.

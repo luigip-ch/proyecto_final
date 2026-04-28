@@ -101,9 +101,9 @@ El dígito **4** aparece 3.9 veces más que el dígito **5** en la posición de 
 
 3. predict() → list[int]
    └── Para cada posición: muestrear 1 dígito según p[posición]
-   └── Componer el número de 4 dígitos
+   └── Mantener los 4 dígitos por separado para preservar ceros a la izquierda
    └── Calcular estadísticas del número (paridad, suma, frecuencia)
-   └── Retornar [numero_ganador, serie] como list[int]
+   └── Retornar [miles, centenas, decenas, unidades, serie] como list[int]
 ```
 
 ### Propiedades del modelo
@@ -134,7 +134,7 @@ Si el número generado no cumple las reglas, se regenera hasta obtener uno váli
 
 ## 6. Nota sobre el scrapper
 
-El `scrapper.py` actual está implementado exclusivamente para **Baloto** (fuente: `baloto.com/resultados`). Los datos históricos de la Lotería de Cundinamarca provienen de una fuente diferente y ya están disponibles en el archivo CSV. El scrapper de Cundinamarca debe implementarse por separado cuando se requiera actualización de datos.
+El `scrapper.py` actual está implementado exclusivamente para **Baloto** (fuente: `baloto.com/resultados`). No está montado como endpoint HTTP y no forma parte del contrato de la API actual. Los datos históricos de la Lotería de Cundinamarca provienen de una fuente diferente y ya están disponibles en el archivo CSV. El scraper de Cundinamarca debe implementarse por separado cuando se requiera actualización de datos.
 
 ---
 
