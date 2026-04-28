@@ -139,6 +139,10 @@ datos, entrena el modelo y predice en la misma solicitud.
 | `statistics.pattern_score` | `float` | Actualmente `0.0`; reservado para evolucion del modelo |
 | `generated_at` | `string` | Timestamp UTC con formato `YYYY-MM-DDTHH:MM:SSZ` |
 
+> `main_numbers` contiene 4 digitos individuales. Se devuelven separados para
+> preservar ceros a la izquierda: el numero `0471` se representa como
+> `[0, 4, 7, 1]`, no como el entero `471`.
+
 ### Errores
 
 | HTTP | Causa | Forma actual |
@@ -229,6 +233,24 @@ Consulta el estado de un trabajo creado por `POST /api/train`.
 | `status` | `string` | Estado actual: `queued`, `running`, `completed` o `failed` |
 | `lottery` | `string` | Loteria asociada al trabajo |
 | `error` | `string|null` | Mensaje de error si el trabajo fallo; `null` en caso contrario |
+
+### Valores de `status`
+
+| Valor | Significado |
+|---|---|
+| `queued` | El trabajo fue recibido, aun no inicio |
+| `running` | El entrenamiento esta en curso |
+| `completed` | El entrenamiento termino exitosamente |
+| `failed` | El entrenamiento fallo; ver campo `error` |
+
+### Flujo recomendado
+
+```text
+POST /api/train  ->  recibe job_id
+GET /api/train/{job_id}/status  ->  polling cada 2-3 segundos
+status == "completed"  ->  mostrar exito
+status == "failed"     ->  mostrar error
+```
 
 ### Errores
 
