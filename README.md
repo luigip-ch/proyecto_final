@@ -189,7 +189,7 @@ Endpoints actuales:
 
 ## Agregar una nueva lotería
 
-Esta sección documenta el contrato que debe cumplir cualquier desarrollador que quiera integrar una nueva lotería al sistema actual. Agregar una lotería nueva requiere crear el modelo y registrarlo en la configuración central; si la lotería no tiene el mismo formato que Cundinamarca (4 dígitos + serie), también hay que adaptar la capa API para normalizar su respuesta.
+Esta sección documenta el contrato que debe cumplir cualquier desarrollador que quiera integrar una nueva lotería al sistema actual. Agregar una lotería nueva requiere crear el modelo, registrar la clase en la configuración central y declarar el formato de predicción que la API debe normalizar.
 
 ### Pasos obligatorios
 
@@ -207,7 +207,7 @@ app/bd/historical/<id_loteria>/<id_loteria>_historico.csv
 app/bd/historical/medellin/medellin_historico.csv
 ```
 
-El archivo CSV debe contener al menos las columnas que el modelo va a consumir. Para loterias de número único (como Cundinamarca), la estructura mínima es:
+El archivo CSV debe contener al menos las columnas que el modelo va a consumir. Para loterías de 4 cifras + serie, la estructura mínima es:
 
 | Columna | Tipo | Descripción |
 |---|---|---|
@@ -279,15 +279,16 @@ class MedellinModel(BaseModel):
 
 **Contrato del método `predict()` soportado por la API actual:**
 
-El endpoint `POST /api/predict` espera que el modelo retorne una lista con cinco enteros:
+El endpoint `POST /api/predict` normaliza la lista retornada por el modelo según la entrada configurada en `LOTTERY_PREDICTION_FORMATS`:
 
 | Tipo de lotería | Ejemplo | Retorno esperado de `predict()` |
 |---|---|---|
-| Número de 4 cifras + serie | Cundinamarca | `[miles, centenas, decenas, unidades, serie]` — 5 enteros |
+| 4 cifras + serie | Cundinamarca | `[miles, centenas, decenas, unidades, serie]` |
+| 5 números + especial | Baloto | `[n1, n2, n3, n4, n5, superbalota]` |
 
-> **Regla de oro:** Los ceros a la izquierda **nunca** se combinan en un entero. Para Cundinamarca, el número `0471` se retorna como `[0, 4, 7, 1]`, no como `471`. La API aplica el formato final (zero-padding, strings) antes de enviar al frontend.
+> **Regla de oro:** En loterías de 4 cifras, los ceros a la izquierda **nunca** se combinan en un entero. El número `0471` se retorna como `[0, 4, 7, 1]`, no como `471`. La API aplica el formato final (zero-padding, strings) antes de enviar al frontend.
 >
-> Loterias con otra estructura, como Baloto o modelos de bolillas, requieren ampliar `app/backend/api/predict.py` antes de exponerlas por la API.
+> Loterías con otra estructura requieren una entrada en `LOTTERY_PREDICTION_FORMATS` antes de exponerlas por la API. Baloto ya tiene formato configurado: 5 números principales + superbalota, sin serie.
 
 ---
 
@@ -356,7 +357,7 @@ pytest -m integration
 - [ ] Clase registrada en `REGISTRY` de `app/config/registry.py`
 - [ ] Nombre de display registrado en `LOTTERY_DISPLAY_NAMES` de `app/config/__init__.py`
 - [ ] Tests unitarios escritos para la nueva clase (mínimo: `load_data`, `train`, `predict`)
-- [ ] Si la lotería no es de 4 cifras + serie, adaptar `app/backend/api/predict.py` y documentar el nuevo contrato
+- [ ] Si la lotería no es de 4 cifras + serie, registrar su formato en `LOTTERY_PREDICTION_FORMATS` y documentar el contrato
 - [ ] `pytest` pasa al 100% sin errores
 
 ---

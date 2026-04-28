@@ -114,6 +114,24 @@ async def test_predict_response_has_main_numbers(client):
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+async def test_predict_normalizes_baloto_shape(client):
+    """Verifica que Baloto use 5 números principales y superbalota."""
+    mock_model = MagicMock()
+    mock_model.predict.return_value = [5, 12, 30, 36, 40, 9]
+    with patch("app.backend.api.predict.get_model", return_value=mock_model):
+        response = await client.post("/api/predict", json={"lottery": "baloto"})
+    data = response.json()
+    assert response.status_code == 200
+    assert data["prediction"]["main_numbers"] == [5, 12, 30, 36, 40]
+    assert data["prediction"]["special_number"] == 9
+    assert data["prediction"]["serie"] is None
+    assert data["statistics"]["sum"] == 123
+    assert data["statistics"]["sum_in_optimal_range"] is None
+    assert data["statistics"]["optimal_sum_range"] is None
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
 async def test_predict_returns_422_for_missing_lottery(client):
     """Verifica validación 422 cuando falta el campo ``lottery``."""
     response = await client.post("/api/predict", json={})
