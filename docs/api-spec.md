@@ -25,11 +25,15 @@ es una utilidad especifica para Baloto y no aplica automaticamente a las demas
 loterias. Las loterías usan el CSV historico disponible en
 `app/bd/historical/loteria_xxxxx/xxxxx_historico.csv`. donde xxxxx es la lotería.
 
-Loterias registradas en la API:
+Loterias registradas en el `REGISTRY` hoy:
 
 ```json
 ["cundinamarca"]
 ```
+
+La API ya conoce el formato de respuesta de Baloto para evitar romper el
+contrato cuando se implemente y se registre su modelo, pero Baloto no aparece
+en `/api/lotteries` mientras no este en `REGISTRY`.
 
 ---
 
@@ -93,7 +97,7 @@ datos, entrena el modelo y predice en la misma solicitud.
 |---|---|---|---|
 | `lottery` | `string` | Si | Slug de una loteria registrada |
 
-### Response `200 OK`
+### Response `200 OK` - Lotería de 4 cifras + serie
 
 ```json
 {
@@ -120,28 +124,54 @@ datos, entrena el modelo y predice en la misma solicitud.
 }
 ```
 
+### Response `200 OK` - Lotería de 5 números + especial
+
+Para loterías tipo Baloto, la respuesta mantiene el mismo contenedor
+`prediction`, pero cambia la cardinalidad de los valores:
+
+```json
+{
+  "lottery": "baloto",
+  "prediction": {
+    "main_numbers": [5, 12, 30, 36, 40],
+    "special_number": 9,
+    "serie": null
+  },
+  "statistics": {
+    "even_count": 4,
+    "odd_count": 1,
+    "even_odd_ratio": "4:1",
+    "sum": 123,
+    "sum_in_optimal_range": null,
+    "optimal_sum_range": null,
+    "frequency_score": 0.0,
+    "pattern_score": 0.0
+  },
+  "generated_at": "2024-05-27T10:30:00Z"
+}
+```
+
 ### Campos
 
 | Campo | Tipo | Descripcion |
 |---|---|---|
 | `lottery` | `string` | Slug enviado en el request |
-| `prediction.main_numbers` | `int[4]` | Digitos del numero ganador en orden miles, centenas, decenas, unidades |
-| `prediction.special_number` | `int|null` | Siempre `null` para Cundinamarca en la implementacion actual |
-| `prediction.serie` | `string` | Serie con cero-padding a 3 caracteres |
-| `statistics.even_count` | `int` | Cantidad de digitos pares |
-| `statistics.odd_count` | `int` | Cantidad de digitos impares |
+| `prediction.main_numbers` | `int[]` | Numeros principales normalizados segun el tipo de loteria |
+| `prediction.special_number` | `int|null` | Numero especial cuando aplica. En loterias tipo Baloto corresponde a la superbalota |
+| `prediction.serie` | `string|null` | Serie con cero-padding a 3 caracteres cuando aplica. En loterias sin serie es `null` |
+| `statistics.even_count` | `int` | Cantidad de valores pares en `main_numbers` |
+| `statistics.odd_count` | `int` | Cantidad de valores impares en `main_numbers` |
 | `statistics.even_odd_ratio` | `string` | Relacion pares:impares |
-| `statistics.sum` | `int` | Suma de los 4 digitos principales |
-| `statistics.sum_in_optimal_range` | `bool` | `true` si la suma esta entre `10` y `26` |
-| `statistics.optimal_sum_range.min` | `int` | Limite inferior del rango optimo (`10`) |
-| `statistics.optimal_sum_range.max` | `int` | Limite superior del rango optimo (`26`) |
+| `statistics.sum` | `int` | Suma de los valores en `main_numbers` |
+| `statistics.sum_in_optimal_range` | `bool|null` | `true` si la suma esta en el rango optimo configurado; `null` si la loteria no tiene rango definido |
+| `statistics.optimal_sum_range` | `object|null` | Rango optimo configurado para el tipo de loteria. Para loterias de 4 cifras hoy es `{ "min": 10, "max": 26 }`; para Baloto es `null` hasta definir uno |
 | `statistics.frequency_score` | `float` | Actualmente `0.0`; reservado para evolucion del modelo |
 | `statistics.pattern_score` | `float` | Actualmente `0.0`; reservado para evolucion del modelo |
 | `generated_at` | `string` | Timestamp UTC con formato `YYYY-MM-DDTHH:MM:SSZ` |
 
-> `main_numbers` contiene 4 digitos individuales. Se devuelven separados para
-> preservar ceros a la izquierda: el numero `0471` se representa como
-> `[0, 4, 7, 1]`, no como el entero `471`.
+> En loterias de 4 cifras, `main_numbers` contiene digitos individuales. Se
+> devuelven separados para preservar ceros a la izquierda: el numero `0471` se
+> representa como `[0, 4, 7, 1]`, no como el entero `471`.
 
 ### Errores
 
@@ -263,9 +293,9 @@ status == "failed"     ->  mostrar error
 ## Notas de implementacion
 
 1. `lottery` siempre es el slug registrado, por ejemplo `cundinamarca`.
-2. La API actual de prediccion esta normalizada para loterias de 4 cifras con serie.
-3. Los primeros 4 valores de `main_numbers` son digitos individuales, no un entero compuesto.
-4. La serie se devuelve como string de 3 caracteres con cero-padding.
+2. La API normaliza la prediccion segun `LOTTERY_PREDICTION_FORMATS`.
+3. Para loterias de 4 cifras, los valores de `main_numbers` son digitos individuales, no un entero compuesto.
+4. La serie se devuelve como string de 3 caracteres con cero-padding cuando aplica; si no aplica, se devuelve `null`.
 5. `job_id` es un UUID, no sigue un patron basado en fecha.
 6. Los trabajos de entrenamiento se guardan en memoria; se pierden si el proceso reinicia.
 7. Los errores usan la forma nativa de FastAPI (`detail` y errores `422` de Pydantic), no un wrapper `error.code`.

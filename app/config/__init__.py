@@ -38,6 +38,28 @@ SERIE_PADDING: int = 3
 OPTIMAL_SUM_MIN: int = 10
 OPTIMAL_SUM_MAX: int = 26
 
+# Contrato de normalización de predicciones por tipo de lotería.
+# El endpoint /api/predict usa esta metadata para convertir la lista retornada
+# por cada modelo en una respuesta JSON estable.
+DEFAULT_PREDICTION_FORMAT: dict[str, object] = {
+    "main_count": 4,
+    "has_special": False,
+    "has_serie": True,
+    "optimal_sum_min": OPTIMAL_SUM_MIN,
+    "optimal_sum_max": OPTIMAL_SUM_MAX,
+}
+
+LOTTERY_PREDICTION_FORMATS: dict[str, dict[str, object]] = {
+    "cundinamarca": DEFAULT_PREDICTION_FORMAT,
+    "baloto": {
+        "main_count": 5,
+        "has_special": True,
+        "has_serie": False,
+        "optimal_sum_min": None,
+        "optimal_sum_max": None,
+    },
+}
+
 # ── Loterias ──────────────────────────────────────────────────────────────────
 
 # Nombres legibles para mostrar en el frontend.

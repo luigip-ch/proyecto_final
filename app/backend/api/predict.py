@@ -6,7 +6,11 @@ from fastapi import APIRouter, HTTPException
 
 from app.backend.api.schemas import LotteryRequest
 from app.backend.selector import get_model
-from app.config import OPTIMAL_SUM_MAX, OPTIMAL_SUM_MIN, SERIE_PADDING
+from app.config import (
+    DEFAULT_PREDICTION_FORMAT,
+    LOTTERY_PREDICTION_FORMATS,
+    SERIE_PADDING,
+)
 
 router = APIRouter(prefix="/api")
 
@@ -37,29 +41,63 @@ def predict(req: LotteryRequest) -> dict:
     model.train()
     result = model.predict()
 
-    # result = [miles, centenas, decenas, unidades, serie]
-    # Los 4 dígitos se devuelven por separado para preservar ceros a la izquierda.
-    digits = result[:4]
-    serie = result[4]
+    prediction_format = LOTTERY_PREDICTION_FORMATS.get(
+        req.lottery,
+        DEFAULT_PREDICTION_FORMAT,
+    )
+    main_count = int(prediction_format["main_count"])
+    has_special = bool(prediction_format["has_special"])
+    has_serie = bool(prediction_format["has_serie"])
+    expected_len = main_count + int(has_special) + int(has_serie)
 
-    even_count = sum(1 for d in digits if d % 2 == 0)
-    odd_count = 4 - even_count
-    total_sum = sum(digits)
+    if len(result) < expected_len:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                f"predicción inválida para '{req.lottery}': se esperaban "
+                f"{expected_len} valores y se recibieron {len(result)}"
+            ),
+        )
+
+    main_numbers = result[:main_count]
+    cursor = main_count
+
+    special_number = None
+    if has_special:
+        special_number = result[cursor]
+        cursor += 1
+
+    serie = None
+    if has_serie:
+        serie = str(result[cursor]).zfill(SERIE_PADDING)
+
+    even_count = sum(1 for n in main_numbers if n % 2 == 0)
+    odd_count = len(main_numbers) - even_count
+    total_sum = sum(main_numbers)
+
+    optimal_sum_min = prediction_format["optimal_sum_min"]
+    optimal_sum_max = prediction_format["optimal_sum_max"]
+    if optimal_sum_min is None or optimal_sum_max is None:
+        sum_in_optimal_range = None
+        optimal_sum_range = None
+    else:
+        sum_in_optimal_range = int(optimal_sum_min) <= total_sum <= int(optimal_sum_max)
+        optimal_sum_range = {"min": int(optimal_sum_min), "max": int(optimal_sum_max)}
 
     return {
         "lottery": req.lottery,
         "prediction": {
-            "main_numbers": digits,
-            "special_number": None,
-            "serie": str(serie).zfill(SERIE_PADDING),
+            "main_numbers": main_numbers,
+            "special_number": special_number,
+            "serie": serie,
         },
         "statistics": {
             "even_count": even_count,
             "odd_count": odd_count,
             "even_odd_ratio": f"{even_count}:{odd_count}",
             "sum": total_sum,
-            "sum_in_optimal_range": OPTIMAL_SUM_MIN <= total_sum <= OPTIMAL_SUM_MAX,
-            "optimal_sum_range": {"min": OPTIMAL_SUM_MIN, "max": OPTIMAL_SUM_MAX},
+            "sum_in_optimal_range": sum_in_optimal_range,
+            "optimal_sum_range": optimal_sum_range,
             "frequency_score": 0.0,
             "pattern_score": 0.0,
         },

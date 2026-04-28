@@ -58,10 +58,13 @@ class BaseModel(ABC):
         Genera una predicción basada en el modelo entrenado.
 
         Returns:
-            Lista de cinco enteros con el formato
-            ``[miles, centenas, decenas, unidades, serie]``.
-            Los primeros cuatro elementos son dígitos individuales (0-9);
-            el último es el número de serie (0-999).
+            Lista de enteros con la predicción bruta del modelo. La forma
+            exacta depende de la lotería y debe estar registrada en
+            ``LOTTERY_PREDICTION_FORMATS`` para que la API pueda normalizarla.
+
+            Ejemplos:
+            - Cundinamarca: ``[miles, centenas, decenas, unidades, serie]``.
+            - Baloto: ``[n1, n2, n3, n4, n5, superbalota]``.
 
         Raises:
             RuntimeError: si se llama antes de ``train()``.
