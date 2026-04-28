@@ -8,6 +8,30 @@ from httpx import AsyncClient, ASGITransport
 from app.main import app
 
 
+class ApiTestModel:
+    """Modelo serializable usado para pruebas de entrenamiento vía API."""
+
+    def __init__(self):
+        """Inicializa contadores de llamadas y una predicción fija."""
+        self.load_count = 0
+        self.train_count = 0
+        self.predict_count = 0
+        self.prediction = [1, 2, 3, 4, 55]
+
+    def load_data(self):
+        """Registra una llamada simulada de carga de datos."""
+        self.load_count += 1
+
+    def train(self):
+        """Registra una llamada simulada de entrenamiento."""
+        self.train_count += 1
+
+    def predict(self):
+        """Registra una llamada de predicción y devuelve un resultado fijo."""
+        self.predict_count += 1
+        return self.prediction
+
+
 @pytest_asyncio.fixture
 async def client():
     """Entrega un cliente HTTP asíncrono conectado a la app FastAPI."""
@@ -84,7 +108,10 @@ async def test_predict_returns_200(client):
     """Verifica que la predicción responda exitosamente con modelo válido."""
     mock_model = MagicMock()
     mock_model.predict.return_value = [1, 2, 3, 4, 55]
-    with patch("app.backend.api.predict.get_model", return_value=mock_model):
+    with (
+        patch("app.backend.api.predict.get_model", return_value=mock_model),
+        patch("app.backend.api.predict.get_trained_model", return_value=mock_model),
+    ):
         response = await client.post(
             "/api/predict", json={"lottery": "cundinamarca"}
         )
@@ -97,7 +124,10 @@ async def test_predict_response_has_main_numbers(client):
     """Verifica la estructura principal de la respuesta de predicción."""
     mock_model = MagicMock()
     mock_model.predict.return_value = [5, 6, 7, 8, 99]
-    with patch("app.backend.api.predict.get_model", return_value=mock_model):
+    with (
+        patch("app.backend.api.predict.get_model", return_value=mock_model),
+        patch("app.backend.api.predict.get_trained_model", return_value=mock_model),
+    ):
         response = await client.post(
             "/api/predict", json={"lottery": "cundinamarca"}
         )
@@ -132,6 +162,20 @@ async def test_predict_returns_404_for_unknown_lottery(client):
             "/api/predict", json={"lottery": "inexistente"}
         )
     assert response.status_code == 404
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_predict_returns_409_when_model_is_not_trained(client):
+    """Verifica error 409 si la lotería existe pero no fue entrenada."""
+    with (
+        patch("app.backend.api.predict.get_model", return_value=MagicMock()),
+        patch("app.backend.api.predict.get_trained_model", return_value=None),
+    ):
+        response = await client.post(
+            "/api/predict", json={"lottery": "cundinamarca"}
+        )
+    assert response.status_code == 409
 
 
 # ── /api/train ────────────────────────────────────────────────────────────────
@@ -223,11 +267,27 @@ async def test_train_status_returns_404_for_unknown_job(client):
 @pytest.mark.asyncio
 async def test_train_status_completed_after_sync_run(client):
     """El background task completa sincrónicamente en el test client."""
-    mock_model = MagicMock()
-    with patch("app.backend.api.train.get_model", return_value=mock_model):
+    model = ApiTestModel()
+    with patch("app.backend.api.train.get_model", return_value=model):
         train_resp = await client.post(
             "/api/train", json={"lottery": "cundinamarca"}
         )
     job_id = train_resp.json()["job_id"]
     data = (await client.get(f"/api/train/{job_id}/status")).json()
     assert data["status"] == "completed"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_predict_uses_model_trained_by_train_endpoint(client):
+    """Verifica que predict reutilice el modelo entrenado por /api/train."""
+    model = ApiTestModel()
+    with patch("app.backend.api.train.get_model", return_value=model):
+        await client.post("/api/train", json={"lottery": "cundinamarca"})
+
+    response = await client.post("/api/predict", json={"lottery": "cundinamarca"})
+
+    assert response.status_code == 200
+    assert model.load_count == 1
+    assert model.train_count == 1
+    assert model.predict_count == 1

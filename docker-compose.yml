@@ -5,6 +5,10 @@ services:
       - "9002:9002"
     volumes:
       - ./app/bd/historical:/code/app/bd/historical
+      - lottery-models:/code/app/bd/models
+    environment:
+      DATA_DIR: /code/app/bd/historical
+      MODEL_STORE_DIR: /code/app/bd/models
     env_file:
       - .env
     healthcheck:
@@ -13,3 +17,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+volumes:
+  lottery-models:

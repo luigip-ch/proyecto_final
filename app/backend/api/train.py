@@ -5,6 +5,7 @@ import uuid
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 from app.backend.api.schemas import LotteryRequest
+from app.backend.model_store import save_trained_model
 from app.backend.selector import get_model
 
 router = APIRouter(prefix="/api")
@@ -52,6 +53,7 @@ def train(req: LotteryRequest, background_tasks: BackgroundTasks) -> dict:
         try:
             model.load_data()
             model.train()
+            save_trained_model(req.lottery, model)
             _jobs[job_id]["status"] = "completed"
         except Exception as exc:  # noqa: BLE001
             _jobs[job_id]["status"] = "failed"

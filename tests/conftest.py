@@ -1,6 +1,7 @@
 """Define fixtures compartidas por las pruebas unitarias e integración."""
 
 import pytest
+from app.backend import model_store
 from app.ml.base_model import BaseModel
 
 
@@ -18,6 +19,15 @@ def pytest_configure(config):
         "markers",
         "slow: pruebas de entrenamiento (omitir en CI rápido)",
     )
+
+
+@pytest.fixture(autouse=True)
+def clean_trained_model_store(monkeypatch, tmp_path):
+    """Aísla cada prueba limpiando modelos entrenados en memoria y disco."""
+    monkeypatch.setattr(model_store, "MODEL_STORE_DIR", str(tmp_path / "models"))
+    model_store.clear_trained_models(delete_files=True)
+    yield
+    model_store.clear_trained_models(delete_files=True)
 
 
 class ConcreteTestModel(BaseModel):

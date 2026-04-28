@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 
 from app.backend.api.schemas import LotteryRequest
+from app.backend.model_store import get_trained_model
 from app.backend.selector import get_model
 from app.config import OPTIMAL_SUM_MAX, OPTIMAL_SUM_MIN, SERIE_PADDING
 
@@ -16,8 +17,8 @@ def predict(req: LotteryRequest) -> dict:
     """
     Genera una predicción para la lotería solicitada.
 
-    Carga y entrena el modelo en la misma petición antes de producir la
-    respuesta normalizada de la API.
+    Usa un modelo previamente entrenado por ``POST /api/train`` antes de
+    producir la respuesta normalizada de la API.
 
     Args:
         req: Payload con el slug de la lotería.
@@ -27,14 +28,23 @@ def predict(req: LotteryRequest) -> dict:
 
     Raises:
         HTTPException: con estado 404 si la lotería no está registrada.
+        HTTPException: con estado 409 si la lotería aún no fue entrenada.
     """
     try:
-        model = get_model(req.lottery)
+        get_model(req.lottery)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
-    model.load_data()
-    model.train()
+    model = get_trained_model(req.lottery)
+    if model is None:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Modelo '{req.lottery}' no entrenado. "
+                "Ejecute POST /api/train antes de predecir."
+            ),
+        )
+
     result = model.predict()
 
     # result = [miles, centenas, decenas, unidades, serie]

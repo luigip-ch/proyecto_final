@@ -105,10 +105,13 @@ El archivo `.env` contiene los valores por defecto para desarrollo local:
 ```
 ENV=development
 PORT=9002
-DATA_DIR=/code/app/bd/historical
+DATA_DIR=app/bd/historical
+MODEL_STORE_DIR=app/bd/models
 ```
 
 > `ENV=development` habilita Swagger UI en `http://localhost:9002/docs`.
+> `MODEL_STORE_DIR` define dónde se guardan los modelos entrenados; en Docker
+> se monta como un volumen nombrado para conservarlos entre reinicios.
 
 **3. Construir y levantar el contenedor**
 

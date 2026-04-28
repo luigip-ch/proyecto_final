@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app/ ./app/
 
+RUN mkdir -p /code/app/bd/models
 RUN chown -R appuser:appuser /code
 
 USER appuser

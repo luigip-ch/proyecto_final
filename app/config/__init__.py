@@ -20,9 +20,20 @@ PORT: int = int(os.getenv("PORT", "9002"))
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 
-# Directorio raíz de datos históricos (absoluto, resuelto desde este archivo).
+# Directorio raíz de datos históricos.
 BASE_DATA_DIR: str = os.path.normpath(
-    os.path.join(os.path.dirname(__file__), "..", "bd", "historical")
+    os.getenv(
+        "DATA_DIR",
+        os.path.join(os.path.dirname(__file__), "..", "bd", "historical"),
+    )
+)
+
+# Directorio donde se persisten modelos entrenados.
+MODEL_STORE_DIR: str = os.path.normpath(
+    os.getenv(
+        "MODEL_STORE_DIR",
+        os.path.join(os.path.dirname(__file__), "..", "bd", "models"),
+    )
 )
 
 # ── Reglas de negocio ─────────────────────────────────────────────────────────

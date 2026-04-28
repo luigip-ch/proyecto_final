@@ -16,6 +16,9 @@ venv/
 htmlcov/
 .coverage
 
+# Modelos entrenados locales
+app/bd/models/
+
 # Docker
 *.log
 
