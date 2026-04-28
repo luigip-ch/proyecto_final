@@ -22,10 +22,10 @@ La API implementada actualmente expone solo estos endpoints:
 
 No existe un endpoint HTTP para scraping. El modulo `app/backend/scrapper.py`
 es una utilidad especifica para Baloto y no aplica automaticamente a las demas
-loterias. Cundinamarca usa el CSV historico disponible en
-`app/bd/historical/loteria_cundinamarca/cundinamarca_historico.csv`.
+loterias. Las loterías usan el CSV historico disponible en
+`app/bd/historical/loteria_xxxxx/xxxxx_historico.csv`. donde xxxxx es la lotería.
 
-La unica loteria registrada en la API hoy es:
+Loterias registradas en la API:
 
 ```json
 ["cundinamarca"]
