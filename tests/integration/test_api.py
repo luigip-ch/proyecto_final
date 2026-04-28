@@ -10,6 +10,7 @@ from app.main import app
 
 @pytest_asyncio.fixture
 async def client():
+    """Entrega un cliente HTTP asíncrono conectado a la app FastAPI."""
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
@@ -21,6 +22,7 @@ async def client():
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_health_returns_200(client):
+    """Verifica que el endpoint de salud responda exitosamente."""
     response = await client.get("/health")
     assert response.status_code == 200
 
@@ -28,6 +30,7 @@ async def test_health_returns_200(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_health_returns_status_ok(client):
+    """Verifica que el endpoint de salud reporte estado ``ok``."""
     response = await client.get("/health")
     assert response.json()["status"] == "ok"
 
@@ -35,6 +38,7 @@ async def test_health_returns_status_ok(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_health_returns_version(client):
+    """Verifica que la respuesta de salud incluya la versión."""
     response = await client.get("/health")
     assert "version" in response.json()
 
@@ -44,6 +48,7 @@ async def test_health_returns_version(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_lotteries_returns_200(client):
+    """Verifica que el listado de loterías responda exitosamente."""
     response = await client.get("/api/lotteries")
     assert response.status_code == 200
 
@@ -51,6 +56,7 @@ async def test_lotteries_returns_200(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_lotteries_contains_cundinamarca(client):
+    """Verifica que Cundinamarca esté registrada en la API."""
     response = await client.get("/api/lotteries")
     data = response.json()
     names = [item["id"] for item in data["lotteries"]]
@@ -60,6 +66,7 @@ async def test_lotteries_contains_cundinamarca(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_lotteries_response_has_required_fields(client):
+    """Verifica que cada lotería exponga identificador y nombre."""
     response = await client.get("/api/lotteries")
     data = response.json()
     assert "lotteries" in data
@@ -74,6 +81,7 @@ async def test_lotteries_response_has_required_fields(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_predict_returns_200(client):
+    """Verifica que la predicción responda exitosamente con modelo válido."""
     mock_model = MagicMock()
     mock_model.predict.return_value = [1, 2, 3, 4, 55]
     with patch("app.backend.api.predict.get_model", return_value=mock_model):
@@ -86,6 +94,7 @@ async def test_predict_returns_200(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_predict_response_has_main_numbers(client):
+    """Verifica la estructura principal de la respuesta de predicción."""
     mock_model = MagicMock()
     mock_model.predict.return_value = [5, 6, 7, 8, 99]
     with patch("app.backend.api.predict.get_model", return_value=mock_model):
@@ -106,6 +115,7 @@ async def test_predict_response_has_main_numbers(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_predict_returns_422_for_missing_lottery(client):
+    """Verifica validación 422 cuando falta el campo ``lottery``."""
     response = await client.post("/api/predict", json={})
     assert response.status_code == 422
 
@@ -113,6 +123,7 @@ async def test_predict_returns_422_for_missing_lottery(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_predict_returns_404_for_unknown_lottery(client):
+    """Verifica error 404 cuando la lotería solicitada no existe."""
     with patch(
         "app.backend.api.predict.get_model",
         side_effect=ValueError("lotería no registrada"),
@@ -128,6 +139,7 @@ async def test_predict_returns_404_for_unknown_lottery(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_train_returns_202(client):
+    """Verifica que el entrenamiento quede aceptado para ejecución."""
     with patch("app.backend.api.train.get_model", return_value=MagicMock()):
         response = await client.post(
             "/api/train", json={"lottery": "cundinamarca"}
@@ -138,6 +150,7 @@ async def test_train_returns_202(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_train_response_has_job_id(client):
+    """Verifica que la respuesta de entrenamiento incluya ``job_id``."""
     with patch("app.backend.api.train.get_model", return_value=MagicMock()):
         response = await client.post(
             "/api/train", json={"lottery": "cundinamarca"}
@@ -150,6 +163,7 @@ async def test_train_response_has_job_id(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_train_returns_422_for_missing_lottery(client):
+    """Verifica validación 422 al encolar entrenamiento sin lotería."""
     response = await client.post("/api/train", json={})
     assert response.status_code == 422
 
@@ -159,6 +173,7 @@ async def test_train_returns_422_for_missing_lottery(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_train_status_returns_200_for_known_job(client):
+    """Verifica consulta exitosa de un trabajo de entrenamiento existente."""
     with patch("app.backend.api.train.get_model", return_value=MagicMock()):
         train_resp = await client.post(
             "/api/train", json={"lottery": "cundinamarca"}
@@ -171,6 +186,7 @@ async def test_train_status_returns_200_for_known_job(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_train_status_has_required_fields(client):
+    """Verifica los campos mínimos del estado de entrenamiento."""
     with patch("app.backend.api.train.get_model", return_value=MagicMock()):
         train_resp = await client.post(
             "/api/train", json={"lottery": "cundinamarca"}
@@ -185,6 +201,7 @@ async def test_train_status_has_required_fields(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_train_status_valid_values(client):
+    """Verifica que el estado de entrenamiento pertenezca al conjunto válido."""
     with patch("app.backend.api.train.get_model", return_value=MagicMock()):
         train_resp = await client.post(
             "/api/train", json={"lottery": "cundinamarca"}
@@ -197,6 +214,7 @@ async def test_train_status_valid_values(client):
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_train_status_returns_404_for_unknown_job(client):
+    """Verifica error 404 al consultar un trabajo inexistente."""
     response = await client.get("/api/train/job-inexistente/status")
     assert response.status_code == 404
 

@@ -23,11 +23,13 @@ SAMPLE_CSV_ROWS = [
 
 @pytest.fixture
 def sample_df():
+    """Construye un DataFrame con filas históricas mínimas de prueba."""
     return pd.DataFrame(SAMPLE_CSV_ROWS)
 
 
 @pytest.fixture
 def model_with_data(sample_df, tmp_path):
+    """Entrega un modelo apuntando a un CSV temporal con datos de prueba."""
     csv_path = tmp_path / "cundinamarca_historico.csv"
     sample_df.to_csv(csv_path, index=False)
     return CundinamarcaModel(data_path=str(csv_path))
@@ -35,37 +37,48 @@ def model_with_data(sample_df, tmp_path):
 
 @pytest.mark.unit
 class TestCundinamarcaModelInterface:
+    """Pruebas de contrato e inicialización del modelo de Cundinamarca."""
+
     def test_extends_base_model(self):
+        """Verifica que el modelo implemente la interfaz ``BaseModel``."""
         from app.ml.base_model import BaseModel
         assert issubclass(CundinamarcaModel, BaseModel)
 
     def test_instantiates_with_data_path(self, tmp_path):
+        """Verifica que el modelo acepte una ruta de datos explícita."""
         csv_path = tmp_path / "test.csv"
         csv_path.write_text("")
         model = CundinamarcaModel(data_path=str(csv_path))
         assert model is not None
 
     def test_default_data_path_contains_cundinamarca(self):
+        """Verifica que la ruta por defecto corresponda a Cundinamarca."""
         model = CundinamarcaModel()
         assert "cundinamarca" in model.data_path.lower()
 
 
 @pytest.mark.unit
 class TestCundinamarcaModelLoadData:
+    """Pruebas de carga y filtrado de datos históricos."""
+
     def test_load_data_filters_only_mayor(self, model_with_data):
+        """Verifica que la carga conserve solo filas de premio mayor."""
         model_with_data.load_data()
         assert len(model_with_data.df) == 2
 
     def test_load_data_sets_df_attribute(self, model_with_data):
+        """Verifica que ``load_data`` inicialice el DataFrame interno."""
         model_with_data.load_data()
         assert hasattr(model_with_data, "df")
         assert isinstance(model_with_data.df, pd.DataFrame)
 
     def test_load_data_extracts_numero_billete(self, model_with_data):
+        """Verifica que el DataFrame conserve la columna del billete ganador."""
         model_with_data.load_data()
         assert "Numero billete ganador" in model_with_data.df.columns
 
     def test_load_data_raises_if_file_missing(self):
+        """Verifica error explícito cuando el CSV histórico no existe."""
         model = CundinamarcaModel(data_path="/no/existe.csv")
         with pytest.raises(FileNotFoundError):
             model.load_data()
@@ -73,22 +86,28 @@ class TestCundinamarcaModelLoadData:
 
 @pytest.mark.unit
 class TestCundinamarcaModelTrain:
+    """Pruebas del entrenamiento y sus distribuciones de frecuencia."""
+
     def test_train_sets_frecuencias(self, model_with_data):
+        """Verifica que ``train`` cree el atributo de frecuencias."""
         model_with_data.load_data()
         model_with_data.train()
         assert hasattr(model_with_data, "frecuencias")
 
     def test_train_frecuencias_is_dict(self, model_with_data):
+        """Verifica que las frecuencias se almacenen como diccionario."""
         model_with_data.load_data()
         model_with_data.train()
         assert isinstance(model_with_data.frecuencias, dict)
 
     def test_train_frecuencias_keys_are_positions(self, model_with_data):
+        """Verifica que haya una distribución por posición del número."""
         model_with_data.load_data()
         model_with_data.train()
         assert set(model_with_data.frecuencias.keys()) == {"miles", "centenas", "decenas", "unidades"}
 
     def test_train_requires_load_data_first(self):
+        """Verifica que entrenar sin cargar datos produzca ``RuntimeError``."""
         model = CundinamarcaModel(data_path="/cualquiera.csv")
         with pytest.raises(RuntimeError):
             model.train()
@@ -96,7 +115,10 @@ class TestCundinamarcaModelTrain:
 
 @pytest.mark.unit
 class TestCundinamarcaModelPredict:
+    """Pruebas de generación y validación de predicciones."""
+
     def test_predict_returns_list(self, model_with_data):
+        """Verifica que la predicción se devuelva como lista."""
         model_with_data.load_data()
         model_with_data.train()
         result = model_with_data.predict()
@@ -133,6 +155,7 @@ class TestCundinamarcaModelPredict:
         assert 0 <= serie <= 999
 
     def test_predict_is_deterministic_with_seed(self, model_with_data):
+        """Verifica reproducibilidad cuando se usa la misma semilla."""
         model_with_data.load_data()
         model_with_data.train()
         r1 = model_with_data.predict(seed=42)
@@ -140,6 +163,7 @@ class TestCundinamarcaModelPredict:
         assert r1 == r2
 
     def test_predict_requires_train_first(self, model_with_data):
+        """Verifica que predecir sin entrenar produzca ``RuntimeError``."""
         model_with_data.load_data()
         with pytest.raises(RuntimeError):
             model_with_data.predict()
