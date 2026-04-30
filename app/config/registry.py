@@ -15,7 +15,9 @@ Al agregar una nueva lotería:
 
 from app.ml.base_model import BaseModel
 from app.ml.cundinamarca.cundinamarca_ml import CundinamarcaModel
+from app.ml.medellin.medellin_ml import MedellinModel
 
 REGISTRY: dict[str, type[BaseModel]] = {
     "cundinamarca": CundinamarcaModel,
+    "medellin": MedellinModel,
 }

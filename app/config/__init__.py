@@ -67,4 +67,17 @@ LOTTERY_PREDICTION_FORMATS: dict[str, dict[str, object]] = {
 # Al agregar una nueva lotería, añadir la entrada aquí además del REGISTRY.
 LOTTERY_DISPLAY_NAMES: dict[str, str] = {
     "cundinamarca": "Lotería de Cundinamarca",
+    "medellin": "Lotería de Medellín",
+}
+
+LOTTERY_PREDICTION_FORMATS: dict[str, dict[str, object]] = {
+    "cundinamarca": DEFAULT_PREDICTION_FORMAT,
+    "baloto": {
+        "main_count": 5,
+        "has_special": True,
+        "has_serie": False,
+        "optimal_sum_min": None,
+        "optimal_sum_max": None,
+    },
+    "medellin": DEFAULT_PREDICTION_FORMAT,
 }
