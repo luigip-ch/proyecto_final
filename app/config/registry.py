@@ -14,10 +14,12 @@ Al agregar una nueva lotería:
 """
 
 from app.ml.base_model import BaseModel
+from app.ml.bogota.bogota_ml import BogotaModel
 from app.ml.cundinamarca.cundinamarca_ml import CundinamarcaModel
 from app.ml.cruz_roja.cruz_roja_ml import CruzRojaModel
 
 REGISTRY: dict[str, type[BaseModel]] = {
+    "bogota": BogotaModel,
     "cundinamarca": CundinamarcaModel,
     "cruz_roja": CruzRojaModel,
 }
