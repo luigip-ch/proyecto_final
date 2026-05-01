@@ -7,12 +7,21 @@ from app.ml.cruz_roja.cruz_roja_ml import CruzRojaModel
 
 
 SAMPLE_CSV_ROWS = [
-    {"Año del Sorteo": "2,020", "Mes del Sorteo": 1, "Fecha del Sorteo": "29/01/2020",
-     "Lotería": "Loteria de la Cruz Roja", "Número del Sorteo": 2832,
-     "Numero billete ganador": 2773, "Numero serie ganadora": 184, "Tipo de Premio": "Mayor"},
+    {"Año del Sorteo": "2,020", "Mes del Sorteo": 1, "Fecha del Sorteo": "01/01/2020",
+     "Lotería": "Loteria de la Cruz Roja", "Número del Sorteo": 2828,
+     "Numero billete ganador": 1111, "Numero serie ganadora": 100, "Tipo de Premio": "Mayor"},
+    {"Año del Sorteo": "2,020", "Mes del Sorteo": 1, "Fecha del Sorteo": "08/01/2020",
+     "Lotería": "Loteria de la Cruz Roja", "Número del Sorteo": 2829,
+     "Numero billete ganador": 2222, "Numero serie ganadora": 110, "Tipo de Premio": "Mayor"},
     {"Año del Sorteo": "2,020", "Mes del Sorteo": 1, "Fecha del Sorteo": "15/01/2020",
      "Lotería": "Loteria de la Cruz Roja", "Número del Sorteo": 2830,
      "Numero billete ganador": 5872, "Numero serie ganadora": 175, "Tipo de Premio": "Mayor"},
+    {"Año del Sorteo": "2,020", "Mes del Sorteo": 1, "Fecha del Sorteo": "22/01/2020",
+     "Lotería": "Loteria de la Cruz Roja", "Número del Sorteo": 2831,
+     "Numero billete ganador": 1234, "Numero serie ganadora": 180, "Tipo de Premio": "Mayor"},
+    {"Año del Sorteo": "2,020", "Mes del Sorteo": 1, "Fecha del Sorteo": "29/01/2020",
+     "Lotería": "Loteria de la Cruz Roja", "Número del Sorteo": 2832,
+     "Numero billete ganador": 2773, "Numero serie ganadora": 184, "Tipo de Premio": "Mayor"},
     {"Año del Sorteo": "2,020", "Mes del Sorteo": 2, "Fecha del Sorteo": "19/02/2020",
      "Lotería": "Loteria de la Cruz Roja", "Número del Sorteo": 2835,
      "Numero billete ganador": 9854, "Numero serie ganadora": 256, "Tipo de Premio": "Segundo"},
@@ -60,9 +69,10 @@ class TestCruzRojaModelLoadData:
     """Pruebas de carga y filtrado de datos históricos."""
 
     def test_load_data_filters_only_mayor(self, model_with_data):
-        """Verifica que la carga conserve solo filas de premio mayor."""
+        """Verifica que la carga conserve solo filas de premio mayor (menos la primera por lag)."""
         model_with_data.load_data()
-        assert len(model_with_data.df) == 2
+        # Hay 5 "Mayor", pero el primero se descarta por el shift(1) de los lags.
+        assert len(model_with_data.df) == 4
 
     def test_load_data_sets_df_attribute(self, model_with_data):
         """Verifica que ``load_data`` inicialice el DataFrame interno."""
@@ -86,23 +96,25 @@ class TestCruzRojaModelLoadData:
 class TestCruzRojaModelTrain:
     """Pruebas del entrenamiento y sus distribuciones de frecuencia."""
 
-    def test_train_sets_frecuencias(self, model_with_data):
-        """Verifica que ``train`` cree el atributo de frecuencias."""
+    def test_train_sets_models(self, model_with_data):
+        """Verifica que ``train`` cree el diccionario de modelos."""
         model_with_data.load_data()
         model_with_data.train()
-        assert hasattr(model_with_data, "frecuencias")
+        assert hasattr(model_with_data, "models")
+        assert model_with_data.models is not None
 
-    def test_train_frecuencias_is_dict(self, model_with_data):
-        """Verifica que las frecuencias se almacenen como diccionario."""
+    def test_train_models_is_dict(self, model_with_data):
+        """Verifica que los modelos se almacenen como diccionario."""
         model_with_data.load_data()
         model_with_data.train()
-        assert isinstance(model_with_data.frecuencias, dict)
+        assert isinstance(model_with_data.models, dict)
 
-    def test_train_frecuencias_keys_are_positions(self, model_with_data):
-        """Verifica que haya una distribución por posición del número."""
+    def test_train_models_keys_are_positions(self, model_with_data):
+        """Verifica que haya un modelo por cada posición y serie."""
         model_with_data.load_data()
         model_with_data.train()
-        assert set(model_with_data.frecuencias.keys()) == {"miles", "centenas", "decenas", "unidades"}
+        expected_keys = {"miles", "centenas", "decenas", "unidades", "serie"}
+        assert set(model_with_data.models.keys()) == expected_keys
 
     def test_train_requires_load_data_first(self):
         """Verifica que entrenar sin cargar datos produzca ``RuntimeError``."""
