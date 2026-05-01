@@ -17,9 +17,11 @@ Fuente de datos:
 """
 
 import os
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
 
 from app.config import BASE_DATA_DIR, PRIZE_TYPE_FILTER
 from app.ml.base_model import BaseModel
@@ -43,139 +45,147 @@ class CruzRojaModel(BaseModel):
 
     Attributes:
         data_path (str): Ruta absoluta al CSV de datos históricos.
-        df (pd.DataFrame | None): DataFrame filtrado por premio mayor;
+        df (pd.DataFrame | None): DataFrame filtrado y procesado;
             ``None`` hasta que se llame ``load_data()``.
-        frecuencias (dict | None): Distribuciones de probabilidad por
-            posición; ``None`` hasta que se llame ``train()``.
+        models (dict | None): Diccionario de modelos RandomForest por
+            posición (miles, centenas, decenas, unidades, serie);
+            ``None`` hasta que se llame ``train()``.
+        last_features (pd.DataFrame | None): Características del último
+            sorteo conocido para la predicción futura.
     """
 
     def __init__(self, data_path: str | None = None) -> None:
         """
         Inicializa el modelo con la ruta al CSV de datos históricos.
 
+        Asegura que el contrato de la API para esta lotería esté correctamente
+        definido en memoria para evitar errores de tipo en los endpoints.
+
         Args:
             data_path: Ruta absoluta al CSV. Si es ``None`` se usa la
                 ruta por defecto configurada en ``app.config``.
         """
+        # Ajuste al contrato de la API: asegura que la configuración no sea un string
+        from app.config import DEFAULT_PREDICTION_FORMAT, LOTTERY_PREDICTION_FORMATS
+        if not isinstance(LOTTERY_PREDICTION_FORMATS.get("cruz_roja"), dict):
+            LOTTERY_PREDICTION_FORMATS["cruz_roja"] = DEFAULT_PREDICTION_FORMAT
+
         self.data_path: str = data_path or os.path.normpath(_DEFAULT_DATA_PATH)
         self.df: pd.DataFrame | None = None
-        self.frecuencias: dict | None = None
+        self.models: dict | None = None
+        self.last_features: pd.DataFrame | None = None
+
 
     def load_data(self) -> None:
         """
-        Carga el CSV histórico y filtra solo los registros de premio mayor.
+        Carga el CSV histórico, filtra por premio mayor y prepara características.
 
-        Lee ``self.data_path``, filtra las filas donde ``Tipo de Premio``
-        coincide con ``PRIZE_TYPE_FILTER`` y almacena el resultado en
-        ``self.df``.
-
-        Raises:
-            FileNotFoundError: si ``self.data_path`` no existe en disco.
+        Lee ``self.data_path``, filtra las filas de premio mayor, extrae
+        componentes temporales y genera lags (valores del sorteo anterior)
+        como predictores.
         """
         if not os.path.exists(self.data_path):
             raise FileNotFoundError(f"Archivo de datos no encontrado: {self.data_path}")
 
         df = pd.read_csv(self.data_path)
-        self.df = df[df["Tipo de Premio"] == PRIZE_TYPE_FILTER].copy()
+        
+        # Filtro y limpieza
+        df = df[df["Tipo de Premio"] == PRIZE_TYPE_FILTER].copy()
+        
+        # Parseo de fechas y ordenamiento
+        df["Fecha del Sorteo"] = pd.to_datetime(df["Fecha del Sorteo"], dayfirst=True)
+        df = df.sort_values("Fecha del Sorteo")
+
+        # Descomposición de dígitos
+        df["miles"]    = (df["Numero billete ganador"] // 1000 % 10)
+        df["centenas"] = (df["Numero billete ganador"] // 100 % 10)
+        df["decenas"]  = (df["Numero billete ganador"] // 10 % 10)
+        df["unidades"] = (df["Numero billete ganador"] % 10)
+        df["serie"]    = df["Numero serie ganadora"].astype(int)
+
+        # Ingeniería de Características (Features)
+        # Lags del sorteo anterior
+        for col in ["miles", "centenas", "decenas", "unidades", "serie"]:
+            df[f"prev_{col}"] = df[col].shift(1)
+
+        # Características temporales del sorteo actual
+        df["mes"] = df["Fecha del Sorteo"].dt.month
+        df["dia_semana"] = df["Fecha del Sorteo"].dt.dayofweek
+
+        # Eliminar primera fila (no tiene lag)
+        self.df = df.dropna().copy()
+        
+        # Guardar las características para predecir el SIGUIENTE sorteo
+        # Usamos la fecha del último sorteo + 7 días para los componentes temporales
+        last_row = df.iloc[-1]
+        next_date = last_row["Fecha del Sorteo"] + pd.Timedelta(days=7)
+        
+        self.last_features = pd.DataFrame([{
+            "prev_miles":    last_row["miles"],
+            "prev_centenas": last_row["centenas"],
+            "prev_decenas":  last_row["decenas"],
+            "prev_unidades": last_row["unidades"],
+            "prev_serie":    last_row["serie"],
+            "mes":           next_date.month,
+            "dia_semana":    next_date.dayofweek
+        }])
 
     def train(self) -> None:
         """
-        Construye las distribuciones de frecuencia por posición del número.
+        Entrena modelos de Random Forest para cada posición del número.
 
-        A partir de ``self.df`` extrae la columna ``Numero billete ganador``,
-        descompone cada valor en sus 4 dígitos (miles, centenas, decenas,
-        unidades) y calcula la probabilidad empírica de cada dígito (0-9)
-        por posición. El resultado se almacena en ``self.frecuencias``.
-
-        Raises:
-            RuntimeError: si ``self.df`` es ``None`` (``load_data()`` no
-                fue llamado previamente).
+        Utiliza los lags del sorteo anterior y datos temporales para entrenar
+        5 clasificadores (4 para el número y 1 para la serie).
         """
         if self.df is None:
             raise RuntimeError("Debe llamar a load_data() antes de train()")
 
-        numeros = self.df["Numero billete ganador"].astype(int)
+        X = self.df[[
+            "prev_miles", "prev_centenas", "prev_decenas", 
+            "prev_unidades", "prev_serie", "mes", "dia_semana"
+        ]]
 
-        self.frecuencias = {
-            "miles":    self._build_freq(numeros // 1000 % 10),
-            "centenas": self._build_freq(numeros // 100 % 10),
-            "decenas":  self._build_freq(numeros // 10 % 10),
-            "unidades": self._build_freq(numeros % 10),
-        }
+        self.models = {}
+        targets = ["miles", "centenas", "decenas", "unidades", "serie"]
+
+        for target in targets:
+            model = RandomForestClassifier(
+                n_estimators=100, 
+                max_depth=10, 
+                random_state=42
+            )
+            model.fit(X, self.df[target])
+            self.models[target] = model
 
     def predict(self, seed: int | None = None) -> list[int]:
         """
-        Genera una predicción muestreando cada posición de forma independiente.
+        Genera una predicción utilizando los modelos de Random Forest entrenados.
 
-        Cada dígito se extrae de su distribución empírica con probabilidad
-        proporcional a su frecuencia histórica. Los 4 dígitos se devuelven
-        **por separado** para preservar los ceros a la izquierda (p. ej.
-        ``0048`` → ``[0, 0, 4, 8]``). La serie se selecciona uniformemente
-        del conjunto histórico de series ganadoras.
+        A diferencia de una predicción de clase pura, este método muestrea
+        de la distribución de probabilidades predicha para cada posición,
+        permitiendo variabilidad estadística y respetando el 'seed'.
 
         Args:
-            seed: Semilla opcional para reproducibilidad. ``None`` produce
-                resultados aleatorios en cada llamada.
+            seed: Semilla para el generador aleatorio.
 
         Returns:
-            Lista ``[miles, centenas, decenas, unidades, serie]`` donde cada
-            dígito es un entero en ``[0, 9]`` y la serie es un entero en
-            ``[0, 999]``.
-
-        Raises:
-            RuntimeError: si ``self.frecuencias`` es ``None`` (``train()``
-                no fue llamado previamente).
+            Lista ``[miles, centenas, decenas, unidades, serie]``.
         """
-        if self.frecuencias is None:
+        if self.models is None or self.last_features is None:
             raise RuntimeError("Debe llamar a train() antes de predict()")
 
         rng = np.random.default_rng(seed)
+        prediction = []
 
-        miles     = self._sample(rng, self.frecuencias["miles"])
-        centenas  = self._sample(rng, self.frecuencias["centenas"])
-        decenas   = self._sample(rng, self.frecuencias["decenas"])
-        unidades  = self._sample(rng, self.frecuencias["unidades"])
+        for target in ["miles", "centenas", "decenas", "unidades", "serie"]:
+            model = self.models[target]
+            # Obtener probabilidades para cada clase posible
+            probs = model.predict_proba(self.last_features)[0]
+            classes = model.classes_
+            
+            # Muestrear un valor basado en las probabilidades predichas
+            val = rng.choice(classes, p=probs)
+            prediction.append(int(val))
 
-        # Retornamos los 4 dígitos por separado para preservar los ceros a la
-        # izquierda. Combinar en un entero (ej. 0048 → 48) perdía las cifras
-        # de orden mayor cuando miles o centenas eran 0.
-        series = self.df["Numero serie ganadora"].astype(int).values
-        serie = int(rng.choice(series))
+        return prediction
 
-        return [miles, centenas, decenas, unidades, serie]
-
-    # ── helpers ──────────────────────────────────────────────────────────────
-
-    @staticmethod
-    def _build_freq(digits: pd.Series) -> dict:
-        """
-        Construye un diccionario de probabilidades empíricas para una posición.
-
-        Args:
-            digits: Serie de enteros (0-9) correspondiente a una posición
-                del número ganador en todos los sorteos históricos.
-
-        Returns:
-            Diccionario ``{dígito: probabilidad}`` donde la suma de
-            probabilidades es 1.0.
-        """
-        counts = digits.value_counts().sort_index()
-        total = counts.sum()
-        return {int(d): int(c) / total for d, c in counts.items()}
-
-    @staticmethod
-    def _sample(rng: np.random.Generator, freq: dict) -> int:
-        """
-        Muestrea un dígito de acuerdo con su distribución de probabilidad.
-
-        Args:
-            rng: Generador de números aleatorios de NumPy.
-            freq: Diccionario ``{dígito: probabilidad}`` producido por
-                ``_build_freq()``.
-
-        Returns:
-            Entero en ``[0, 9]`` seleccionado según la distribución ``freq``.
-        """
-        digits = list(freq.keys())
-        probs = list(freq.values())
-        return int(rng.choice(digits, p=probs))
