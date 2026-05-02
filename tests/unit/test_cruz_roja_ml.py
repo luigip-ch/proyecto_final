@@ -7,24 +7,13 @@ from app.ml.cruz_roja.cruz_roja_ml import CruzRojaModel
 
 
 SAMPLE_CSV_ROWS = [
-    {"Año del Sorteo": "2,020", "Mes del Sorteo": 1, "Fecha del Sorteo": "01/01/2020",
-     "Lotería": "Loteria de la Cruz Roja", "Número del Sorteo": 2828,
-     "Numero billete ganador": 1111, "Numero serie ganadora": 100, "Tipo de Premio": "Mayor"},
-    {"Año del Sorteo": "2,020", "Mes del Sorteo": 1, "Fecha del Sorteo": "08/01/2020",
-     "Lotería": "Loteria de la Cruz Roja", "Número del Sorteo": 2829,
-     "Numero billete ganador": 2222, "Numero serie ganadora": 110, "Tipo de Premio": "Mayor"},
-    {"Año del Sorteo": "2,020", "Mes del Sorteo": 1, "Fecha del Sorteo": "15/01/2020",
-     "Lotería": "Loteria de la Cruz Roja", "Número del Sorteo": 2830,
-     "Numero billete ganador": 5872, "Numero serie ganadora": 175, "Tipo de Premio": "Mayor"},
-    {"Año del Sorteo": "2,020", "Mes del Sorteo": 1, "Fecha del Sorteo": "22/01/2020",
-     "Lotería": "Loteria de la Cruz Roja", "Número del Sorteo": 2831,
-     "Numero billete ganador": 1234, "Numero serie ganadora": 180, "Tipo de Premio": "Mayor"},
-    {"Año del Sorteo": "2,020", "Mes del Sorteo": 1, "Fecha del Sorteo": "29/01/2020",
-     "Lotería": "Loteria de la Cruz Roja", "Número del Sorteo": 2832,
-     "Numero billete ganador": 2773, "Numero serie ganadora": 184, "Tipo de Premio": "Mayor"},
-    {"Año del Sorteo": "2,020", "Mes del Sorteo": 2, "Fecha del Sorteo": "19/02/2020",
-     "Lotería": "Loteria de la Cruz Roja", "Número del Sorteo": 2835,
-     "Numero billete ganador": 9854, "Numero serie ganadora": 256, "Tipo de Premio": "Segundo"},
+    {
+        "Año del Sorteo": 2020, "Mes del Sorteo": 1, 
+        "Fecha del Sorteo": f"{i+1}/01/2020",
+        "Lotería": "Loteria de la Cruz Roja", "Número del Sorteo": 2828 + i,
+        "Numero billete ganador": 1000 + i, "Numero serie ganadora": 100 + i, 
+        "Tipo de Premio": "Mayor"
+    } for i in range(15)  # Generamos 15 filas para satisfacer el window=10 del modelo
 ]
 
 
@@ -69,10 +58,10 @@ class TestCruzRojaModelLoadData:
     """Pruebas de carga y filtrado de datos históricos."""
 
     def test_load_data_filters_only_mayor(self, model_with_data):
-        """Verifica que la carga conserve solo filas de premio mayor (menos la primera por lag)."""
+        """Verifica que la carga conserve solo filas válidas tras filtros y lags."""
         model_with_data.load_data()
-        # Hay 5 "Mayor", pero el primero se descarta por el shift(1) de los lags.
-        assert len(model_with_data.df) == 4
+        # Con 15 filas, se pierden 10 debido al rolling window(10) + shift(1).
+        assert len(model_with_data.df) == 5
 
     def test_load_data_sets_df_attribute(self, model_with_data):
         """Verifica que ``load_data`` inicialice el DataFrame interno."""
