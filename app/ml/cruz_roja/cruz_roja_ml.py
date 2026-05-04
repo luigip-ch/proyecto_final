@@ -177,17 +177,18 @@ class CruzRojaModel(BaseModel):
         # Guardar las características para predecir el SIGUIENTE sorteo
         # Usamos la fecha del último sorteo + 7 días para los componentes temporales
         last_row = df.iloc[-1]
-        # Necesitamos calcular los valores para el dataframe de predicción
         next_date = last_row["Fecha del Sorteo"] + pd.Timedelta(days=7)
         
-        self.last_features = pd.DataFrame([{
+        # Construcción dinámica para evitar drift de características
+        next_features_dict = {
             "prev_miles":    last_row["miles"],
             "prev_centenas": last_row["centenas"],
             "prev_decenas":  last_row["decenas"],
             "prev_unidades": last_row["unidades"],
             "prev_serie":    last_row["serie"],
             "prev_unidades_par": int(last_row["unidades"] % 2 == 0),
-            "prev_unidades_par_streak": df["prev_unidades_par"].tail(3).sum(),
+            # La racha para el siguiente sorteo es la suma de paridad de los últimos 3 sorteos conocidos
+            "prev_unidades_par_streak": df["prev_unidades_par"].tail(2).sum() + int(last_row["unidades"] % 2 == 0),
             "prev_sum_digits": last_row["miles"] + last_row["centenas"] + last_row["decenas"] + last_row["unidades"],
             "prev_recency_unidades": last_row["recency_unidades"],
             "global_prob_unidades": unidades_probs.get(last_row["unidades"], 0.1),
@@ -195,13 +196,15 @@ class CruzRojaModel(BaseModel):
             "freq_5_unidades":  (df["unidades"].tail(5) == last_row["unidades"]).sum(),
             "freq_10_decenas":  (df["decenas"].tail(10) == last_row["decenas"]).sum(),
             "freq_5_decenas":   (df["decenas"].tail(5) == last_row["decenas"]).sum(),
+            # Diferencia entre el sorteo más reciente (T) y el anterior (T-1)
             "diff_unidades":    last_row["unidades"] - df["unidades"].iloc[-2] if len(df) > 1 else 0,
             "diff_decenas":     last_row["decenas"] - df["decenas"].iloc[-2] if len(df) > 1 else 0,
             "sin_mes":          np.sin(2 * np.pi * next_date.month / 12),
             "cos_mes":          np.cos(2 * np.pi * next_date.month / 12),
             "sin_dia":          np.sin(2 * np.pi * next_date.dayofweek / 7),
             "cos_dia":          np.cos(2 * np.pi * next_date.dayofweek / 7)
-        }])[self._feature_cols] # Filtrar para que coincida exactamente con el entrenamiento
+        }
+        self.last_features = pd.DataFrame([next_features_dict])[self._feature_cols]
 
     def _calculate_recency(self, series: pd.Series) -> pd.Series:
         """Calcula cuántos sorteos han pasado desde la última vez que salió cada dígito."""
