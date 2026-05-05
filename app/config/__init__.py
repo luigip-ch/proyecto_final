@@ -59,6 +59,7 @@ LOTTERY_DISPLAY_NAMES: dict[str, str] = {
     "medellin": "Lotería de Medellín",
     "cruz_roja": "Lotería de la Cruz Roja",
     "bogota": "Lotería de Bogotá",
+    "manizales": "Lotería de Manizales",
 }
 
 LOTTERY_PREDICTION_FORMATS: dict[str, dict[str, object]] = {
@@ -66,6 +67,7 @@ LOTTERY_PREDICTION_FORMATS: dict[str, dict[str, object]] = {
     "medellin": DEFAULT_PREDICTION_FORMAT,
     "cruz_roja": DEFAULT_PREDICTION_FORMAT,
     "bogota": DEFAULT_PREDICTION_FORMAT,
+    "manizales": DEFAULT_PREDICTION_FORMAT,
     "baloto": {
         "main_count": 5,
         "has_special": True,
