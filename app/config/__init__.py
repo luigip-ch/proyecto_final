@@ -59,6 +59,7 @@ LOTTERY_DISPLAY_NAMES: dict[str, str] = {
     "medellin": "Lotería de Medellín",
     "cruz_roja": "Lotería de la Cruz Roja",
     "bogota": "Lotería de Bogotá",
+    "baloto": "Baloto",
     "manizales": "Lotería de Manizales",
     "risaralda": "Lotería de Risaralda",
 }
