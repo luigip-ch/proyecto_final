@@ -113,7 +113,10 @@ class TestCruzRojaModelTrain:
         """Verifica que haya un modelo por cada posición y serie."""
         model_with_data.load_data()
         model_with_data.train()
-        expected_keys = {"miles", "centenas", "decenas", "unidades", "serie"}
+        expected_keys = {
+            "miles", "centenas", "decenas", "unidades", 
+            "s_centena", "s_decena", "s_unidad"
+        }
         assert set(model_with_data.models.keys()) == expected_keys
 
     def test_train_requires_load_data_first(self):

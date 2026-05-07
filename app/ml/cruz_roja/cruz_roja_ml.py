@@ -17,6 +17,7 @@ Fuente de datos:
 """
 
 import os
+import warnings
 from datetime import datetime
 
 import numpy as np
@@ -102,6 +103,9 @@ class CruzRojaModel(BaseModel):
         df["decenas"]  = (df["Numero billete ganador"] // 10 % 10)
         df["unidades"] = (df["Numero billete ganador"] % 10)
         df["serie"]    = df["Numero serie ganadora"].astype(int)
+        df["s_centena"] = (df["Numero serie ganadora"] // 100 % 10)
+        df["s_decena"]  = (df["Numero serie ganadora"] // 10 % 10)
+        df["s_unidad"]  = (df["Numero serie ganadora"] % 10)
 
         # Ingeniería de Características (Features)
         # Lags del sorteo anterior
@@ -135,7 +139,7 @@ class CruzRojaModel(BaseModel):
         Entrena modelos de Random Forest para cada posición del número.
 
         Utiliza los lags del sorteo anterior y datos temporales para entrenar
-        5 clasificadores (4 para el número y 1 para la serie).
+        7 clasificadores (4 para el número y 3 para la serie descompuesta).
         """
         if self.df is None:
             raise RuntimeError("Debe llamar a load_data() antes de train()")
@@ -146,7 +150,10 @@ class CruzRojaModel(BaseModel):
         ]]
 
         self.models = {}
-        targets = ["miles", "centenas", "decenas", "unidades", "serie"]
+        targets = [
+            "miles", "centenas", "decenas", "unidades", 
+            "s_centena", "s_decena", "s_unidad"
+        ]
 
         for target in targets:
             model = RandomForestClassifier(
@@ -154,7 +161,11 @@ class CruzRojaModel(BaseModel):
                 max_depth=10, 
                 random_state=42
             )
-            model.fit(X, self.df[target])
+            # Silenciamos la advertencia heurística de sklearn ya que en loterías
+            # el uso de clasificación por dígitos es intencional y correcto.
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", UserWarning)
+                model.fit(X, self.df[target])
             self.models[target] = model
 
     def predict(self, seed: int | None = None) -> list[int]:
@@ -175,17 +186,23 @@ class CruzRojaModel(BaseModel):
             raise RuntimeError("Debe llamar a train() antes de predict()")
 
         rng = np.random.default_rng(seed)
-        prediction = []
+        raw_samples = {}
 
-        for target in ["miles", "centenas", "decenas", "unidades", "serie"]:
+        targets_to_sample = [
+            "miles", "centenas", "decenas", "unidades", 
+            "s_centena", "s_decena", "s_unidad"
+        ]
+        
+        for target in targets_to_sample:
             model = self.models[target]
-            # Obtener probabilidades para cada clase posible
             probs = model.predict_proba(self.last_features)[0]
             classes = model.classes_
-            
-            # Muestrear un valor basado en las probabilidades predichas
-            val = rng.choice(classes, p=probs)
-            prediction.append(int(val))
+            raw_samples[target] = rng.choice(classes, p=probs)
 
-        return prediction
-
+        return [
+            int(raw_samples["miles"]),
+            int(raw_samples["centenas"]),
+            int(raw_samples["decenas"]),
+            int(raw_samples["unidades"]),
+            int(raw_samples["s_centena"] * 100 + raw_samples["s_decena"] * 10 + raw_samples["s_unidad"])
+        ]
