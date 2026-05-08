@@ -49,34 +49,28 @@ DEFAULT_PREDICTION_FORMAT: dict[str, object] = {
     "optimal_sum_max": OPTIMAL_SUM_MAX,
 }
 
-LOTTERY_PREDICTION_FORMATS: dict[str, dict[str, object]] = {
-    "cundinamarca": DEFAULT_PREDICTION_FORMAT,
-    "cruz_roja": DEFAULT_PREDICTION_FORMAT,
-    "baloto": {
-        "main_count": 5,
-        "has_special": True,
-        "has_serie": False,
-        "optimal_sum_min": None,
-        "optimal_sum_max": None,
-    },
-}
-
 # ── Loterias ──────────────────────────────────────────────────────────────────
 
 # Nombres legibles para mostrar en el frontend.
 # Clave: slug interno (igual al usado en el REGISTRY y en los requests).
 # Al agregar una nueva lotería, añadir la entrada aquí además del REGISTRY.
 LOTTERY_DISPLAY_NAMES: dict[str, str] = {
-    "boyaca": "Lotería de Boyacá",
-    "cruz_roja": "Lotería de la Cruz Roja",
     "cundinamarca": "Lotería de Cundinamarca",
     "medellin": "Lotería de Medellín",
+    "cruz_roja": "Lotería de la Cruz Roja",
+    "bogota": "Lotería de Bogotá",
+    "baloto": "Baloto",
+    "manizales": "Lotería de Manizales",
+    "risaralda": "Lotería de Risaralda",
 }
 
 LOTTERY_PREDICTION_FORMATS: dict[str, dict[str, object]] = {
-    "boyaca": DEFAULT_PREDICTION_FORMAT,
-    "cruz_roja": DEFAULT_PREDICTION_FORMAT,
     "cundinamarca": DEFAULT_PREDICTION_FORMAT,
+    "medellin": DEFAULT_PREDICTION_FORMAT,
+    "cruz_roja": DEFAULT_PREDICTION_FORMAT,
+    "bogota": DEFAULT_PREDICTION_FORMAT,
+    "manizales": DEFAULT_PREDICTION_FORMAT,
+    "risaralda": DEFAULT_PREDICTION_FORMAT,
     "baloto": {
         "main_count": 5,
         "has_special": True,
@@ -84,5 +78,4 @@ LOTTERY_PREDICTION_FORMATS: dict[str, dict[str, object]] = {
         "optimal_sum_min": None,
         "optimal_sum_max": None,
     },
-    "medellin": DEFAULT_PREDICTION_FORMAT,
 }
