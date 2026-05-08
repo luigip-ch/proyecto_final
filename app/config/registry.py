@@ -21,6 +21,7 @@ from app.ml.cruz_roja.cruz_roja_ml import CruzRojaModel
 from app.ml.baloto.baloto_ml import BalotoModel
 from app.ml.manizales.manizales_ml import ManizalesModel
 from app.ml.risaralda.risaralda_ml import RisaraldaModel
+from app.ml.boyaca.boyaca_ml import BoyacaModel
 
 REGISTRY: dict[str, type[BaseModel]] = {
     "bogota": BogotaModel,
@@ -30,4 +31,5 @@ REGISTRY: dict[str, type[BaseModel]] = {
     "baloto": BalotoModel,
     "manizales": ManizalesModel,
     "risaralda": RisaraldaModel,
+    "boyaca": BoyacaModel,
 }
