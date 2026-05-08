@@ -28,7 +28,7 @@ loterias. Las loterías usan el CSV historico disponible en
 Loterias registradas en el `REGISTRY` hoy:
 
 ```json
-["cundinamarca"]
+["cundinamarca", "boyaca"]
 ```
 
 La API ya conoce el formato de respuesta de Baloto para evitar romper el
