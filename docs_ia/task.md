@@ -1,0 +1,5 @@
+- `[x]` Crear clase `BalotoModel` en `app/ml/baloto/baloto_ml.py`.
+- `[x]` Registrar `BalotoModel` en `app/config/registry.py`.
+- `[x]` Añadir nombre display en `app/config/__init__.py`.
+- `[x]` Escribir pruebas unitarias en `tests/unit/test_baloto_ml.py`.
+- `[x]` Ejecutar los tests para validar la correcta integración.
