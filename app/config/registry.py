@@ -22,6 +22,7 @@ from app.ml.baloto.baloto_ml import BalotoModel
 from app.ml.manizales.manizales_ml import ManizalesModel
 from app.ml.risaralda.risaralda_ml import RisaraldaModel
 from app.ml.boyaca.boyaca_ml import BoyacaModel
+from app.ml.sorteo_extra_de_colombia.sorteo_extra_de_colombia_ml import SorteoExtraDeColombiaModel
 
 REGISTRY: dict[str, type[BaseModel]] = {
     "bogota": BogotaModel,
@@ -32,4 +33,5 @@ REGISTRY: dict[str, type[BaseModel]] = {
     "manizales": ManizalesModel,
     "risaralda": RisaraldaModel,
     "boyaca": BoyacaModel,
+    "sorteo_extra_de_colombia": SorteoExtraDeColombiaModel,
 }
