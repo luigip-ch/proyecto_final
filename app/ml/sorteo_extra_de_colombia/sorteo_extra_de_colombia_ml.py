@@ -10,16 +10,19 @@ import os
 import warnings
 from datetime import datetime
 
+# Suprimir la advertencia global de dependencias de requests para limpiar la consola
+warnings.filterwarnings("ignore", message=".*urllib3.*chardet.*charset_normalizer.*")
+
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, KFold
 
 from app.config import BASE_DATA_DIR, PRIZE_TYPE_FILTER
 from app.ml.base_model import BaseModel
 
 _DEFAULT_DATA_PATH = os.path.join(
-    BASE_DATA_DIR, "loteria_sorteo_extra", "sorteo_extra_historico.csv"
+    BASE_DATA_DIR, "sorteo_extra_de_colombia", "sorteo_extra_de_colombia_historico.csv"
 )
 
 _TARGET_COLUMNS = ["miles", "centenas", "decenas", "unidades", "serie"]
@@ -101,13 +104,17 @@ class SorteoExtraDeColombiaModel(BaseModel):
             'min_samples_split': [2, 5],
         }
 
+        # Usar KFold estandar en lugar del StratifiedKFold por defecto para evitar 
+        # errores cuando una clase (número) tiene muy pocas apariciones históricas.
+        cv_strategy = KFold(n_splits=3, shuffle=True, random_state=42)
+
         for target in _TARGET_COLUMNS:
             rf = RandomForestClassifier(random_state=42, class_weight='balanced')
             # GridSearchCV para validación cruzada y Train/Test Tuning
             grid_search = GridSearchCV(
                 estimator=rf, 
                 param_grid=param_grid, 
-                cv=3, 
+                cv=cv_strategy, 
                 scoring='accuracy',
                 n_jobs=-1
             )

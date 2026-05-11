@@ -38,9 +38,9 @@ class TestSorteoExtraDeColombiaModel:
 
     def test_init_default_path(self):
         model = SorteoExtraDeColombiaModel()
-        expected_path = os.path.normpath("app/bd/historical/loteria_sorteo_extra/sorteo_extra_historico.csv")
+        expected_path = os.path.normpath("app/bd/historical/sorteo_extra_de_colombia/sorteo_extra_de_colombia_historico.csv")
         # El base dir depende de cómo se cargue localmente, podemos asegurar que termine en ese path
-        assert model.data_path.endswith(os.path.normpath("loteria_sorteo_extra/sorteo_extra_historico.csv"))
+        assert model.data_path.endswith(os.path.normpath("sorteo_extra_de_colombia/sorteo_extra_de_colombia_historico.csv"))
 
     def test_init_custom_path(self, tmp_path):
         custom_path = tmp_path / "custom_extra.csv"
