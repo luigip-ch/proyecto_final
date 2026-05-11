@@ -63,6 +63,7 @@ LOTTERY_DISPLAY_NAMES: dict[str, str] = {
     "manizales": "Lotería de Manizales",
     "risaralda": "Lotería de Risaralda",
     "boyaca": "Lotería de Boyacá",
+    "sorteo_extra_de_colombia": "Sorteo Extra de Colombia",
 }
 
 LOTTERY_PREDICTION_FORMATS: dict[str, dict[str, object]] = {
@@ -80,4 +81,5 @@ LOTTERY_PREDICTION_FORMATS: dict[str, dict[str, object]] = {
         "optimal_sum_min": None,
         "optimal_sum_max": None,
     },
+    "sorteo_extra_de_colombia": DEFAULT_PREDICTION_FORMAT,
 }
