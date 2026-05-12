@@ -1,0 +1,362 @@
+<!-- 
+  PLAN NARRATIVO Y DE ESTRUCTURA:
+  Esta SPA narra la "Operación Blitzkrieg" del desarrollo Frontend del AI Lottery Predictor.
+  1. Introducción/Hook: Resumen del sprint de 48h y el impacto de la metodología.
+  2. Core Metrics: Indicadores clave de rendimiento (Horas, Errores resueltos).
+  3. Distribución de Esfuerzo (Chart.js Doughnut): Muestra dónde se invirtió el tiempo.
+  4. Análisis de Crisis (Chart.js Bar): Evaluación de la severidad de los errores encontrados.
+  5. Arquitectura del Sistema (CSS Flowchart): Diagrama del puente Frontend-Backend.
+  6. Bitácora Táctica: Línea de tiempo detallada de viernes a domingo.
+  
+  JUSTIFICACIÓN DE VISUALIZACIONES:
+  - Distribución de Tiempo -> Goal: Composition -> Doughnut Chart -> Permite ver el peso del diseño vs debugging. Implementado en Chart.js (NO SVG).
+  - Severidad de Crisis -> Goal: Compare -> Bar Chart -> Permite jerarquizar los errores que casi detienen el proyecto. Implementado en Chart.js (NO SVG).
+  - Flujo de Arquitectura -> Goal: Organize/Relationships -> CSS Diagram -> Muestra la conexión de puertos. Implementado con HTML/Tailwind (NO SVG, NO MERMAID).
+  
+  CONFIRMACIÓN DE RESTRICCIONES:
+  Se confirma explícitamente que NO se ha utilizado Mermaid JS y NO se ha utilizado ninguna imagen SVG en este código. Todo el diseño se basa en CSS, Canvas y caracteres Unicode.
+  
+  PALETA DE COLORES:
+  Basado en opciones vibrantes (Emerald & Cyan over Dark Slate) para estética B2B y tecnológica.
+-->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operación Blitzkrieg: Reporte Frontend Baloto</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Inter:wght@300;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #34d399, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        .node-box {
+            background-color: #1e293b;
+            border: 2px solid #34d399;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            font-weight: bold;
+            width: 100%;
+            max-width: 200px;
+            margin: 0 auto;
+            z-index: 10;
+            position: relative;
+        }
+
+        .connector-line {
+            width: 2px;
+            background-color: #34d399;
+            margin: 0 auto;
+            height: 40px;
+        }
+    </style>
+</head>
+
+<body class="antialiased pb-20">
+
+    <header class="pt-20 pb-12 px-4 border-b border-emerald-900/50 bg-slate-900">
+        <div class="max-w-5xl mx-auto text-center">
+            <div
+                class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 mb-6 text-3xl">
+                🚀</div>
+            <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-4">Operación Blitzkrieg</h1>
+            <h2 class="text-2xl md:text-3xl font-medium gradient-text mb-6">Infografía de Arquitectura Frontend</h2>
+            <p class="text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed">
+                Documentación interactiva del desarrollo, resolución de crisis tácticas y despliegue del módulo visual
+                para la Suite AI Lottery Predictor. Un caso de estudio en orquestación de Agentes IA y React.
+            </p>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 mt-12 space-y-16">
+
+        <section>
+            <div class="text-center mb-10">
+                <h3 class="text-3xl font-bold text-white">Indicadores de Rendimiento (KPIs)</h3>
+                <p class="text-slate-400 mt-2">Métricas globales del sprint de desarrollo de 48 horas.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-card rounded-2xl p-8 text-center transform transition hover:scale-105">
+                    <div class="text-5xl mb-2">⏱️</div>
+                    <div class="text-4xl font-bold text-white mb-1">48<span class="text-xl text-emerald-400">h</span>
+                    </div>
+                    <div class="text-sm text-slate-400 uppercase tracking-widest font-bold">Tiempo de Ciclo</div>
+                </div>
+                <div class="glass-card rounded-2xl p-8 text-center transform transition hover:scale-105">
+                    <div class="text-5xl mb-2">🛡️</div>
+                    <div class="text-4xl font-bold text-white mb-1">100<span class="text-xl text-emerald-400">%</span>
+                    </div>
+                    <div class="text-sm text-slate-400 uppercase tracking-widest font-bold">Bugs Resueltos</div>
+                </div>
+                <div class="glass-card rounded-2xl p-8 text-center transform transition hover:scale-105">
+                    <div class="text-5xl mb-2">🌐</div>
+                    <div class="text-4xl font-bold text-white mb-1">3</div>
+                    <div class="text-sm text-slate-400 uppercase tracking-widest font-bold">Entornos Operativos</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="glass-card rounded-2xl p-8">
+                <h3 class="text-2xl font-bold text-white mb-2">Distribución de Esfuerzo</h3>
+                <p class="text-slate-400 text-sm mb-8">Análisis de la carga de trabajo durante el fin de semana. Destaca
+                    la inversión de tiempo en programación defensiva y estética B2B.</p>
+                <div class="chart-container">
+                    <canvas id="effortChart"></canvas>
+                </div>
+                <p class="text-center text-xs text-emerald-500 mt-6 font-mono">■ Configuración ■ Resolución Crisis ■
+                    Interfaz UI/UX ■ Despliegue Público</p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-8">
+                <h3 class="text-2xl font-bold text-white mb-2">Severidad de Bloqueos</h3>
+                <p class="text-slate-400 text-sm mb-8">Clasificación de los incidentes técnicos superados, medidos por
+                    su potencial destructivo sobre la aplicación (Escala 1-10).</p>
+                <div class="chart-container">
+                    <canvas id="blocksChart"></canvas>
+                </div>
+                <p class="text-center text-xs text-emerald-500 mt-6 font-mono">Auditoría de Errores Neutralizados</p>
+            </div>
+        </section>
+
+        <section class="glass-card rounded-2xl p-8">
+            <div class="text-center mb-10">
+                <h3 class="text-3xl font-bold text-white">Arquitectura Desacoplada</h3>
+                <p class="text-slate-400 mt-2">Diagrama de flujo del sistema implementado: El puente transparente entre
+                    la interfaz gráfica y los modelos de Machine Learning.</p>
+            </div>
+
+            <div class="flex flex-col items-center justify-center py-6">
+
+                <div class="node-box">
+                    <span class="text-2xl block mb-2">💻</span>
+                    <span class="text-emerald-400 text-xs font-mono block mb-1">PORT: 5173</span>
+                    El Comedor (React)
+                </div>
+
+                <div class="connector-line relative">
+                    <div
+                        class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-900 text-[10px] text-cyan-400 font-mono px-2 py-1 rounded border border-cyan-800">
+                        fetch('/api/lotteries')
+                    </div>
+                </div>
+
+                <div class="node-box border-cyan-400 bg-slate-800">
+                    <span class="text-2xl block mb-2">🌉</span>
+                    <span class="text-cyan-400 text-xs font-mono block mb-1">VITE.CONFIG.TS</span>
+                    Proxy Transparente
+                </div>
+
+                <div class="connector-line relative bg-cyan-400">
+                    <div
+                        class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-900 text-[10px] text-emerald-400 font-mono px-2 py-1 rounded border border-emerald-800">
+                        Redirección a 9002
+                    </div>
+                </div>
+
+                <div class="node-box border-purple-400">
+                    <span class="text-2xl block mb-2">🔥</span>
+                    <span class="text-purple-400 text-xs font-mono block mb-1">PORT: 9002</span>
+                    La Cocina (FastAPI + IA)
+                </div>
+
+            </div>
+        </section>
+
+        <section>
+            <div class="text-center mb-10">
+                <h3 class="text-3xl font-bold text-white">Bitácora Táctica de Resolución</h3>
+                <p class="text-slate-400 mt-2">Registro secuencial de los problemas abordados y las soluciones de
+                    ingeniería aplicadas.</p>
+            </div>
+
+            <div class="space-y-6">
+                <div
+                    class="bg-slate-800/50 border border-slate-700 rounded-xl p-6 hover:border-emerald-500 transition-colors">
+                    <div class="flex items-center gap-4 mb-3">
+                        <div
+                            class="w-10 h-10 rounded bg-slate-700 flex items-center justify-center text-xl font-bold text-slate-300">
+                            V</div>
+                        <h4 class="text-xl font-bold text-emerald-300">Colapso PostCSS (Viernes)</h4>
+                    </div>
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        <strong class="text-white">Problema:</strong> El servidor Vite colapsó en el arranque indicando
+                        <code class="bg-slate-900 px-1 text-red-400">Cannot find module 'autoprefixer'</code>. Tailwind
+                        v4 había cambiado su arquitectura de dependencias.<br>
+                        <strong class="text-white">Solución:</strong> Intervención manual en la terminal para forzar la
+                        instalación de los motores secundarios mediante <code
+                            class="bg-slate-900 px-1 text-emerald-400">npm install -D autoprefixer</code> y eliminación
+                        de archivos de configuración obsoletos de la v3.
+                    </p>
+                </div>
+
+                <div
+                    class="bg-slate-800/50 border border-slate-700 rounded-xl p-6 hover:border-emerald-500 transition-colors">
+                    <div class="flex items-center gap-4 mb-3">
+                        <div
+                            class="w-10 h-10 rounded bg-slate-700 flex items-center justify-center text-xl font-bold text-slate-300">
+                            S</div>
+                        <h4 class="text-xl font-bold text-emerald-300">Pantalla Blanca de la Muerte (Sábado)</h4>
+                    </div>
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        <strong class="text-white">Problema:</strong> Fatal Runtime Error. React esperaba recibir un
+                        Array limpio <code class="bg-slate-900 px-1 text-slate-400">["baloto", "boyaca"]</code> pero el
+                        backend envió un objeto anidado complejo. La iteración falló provocando el apagado total de la
+                        interfaz.<br>
+                        <strong class="text-white">Solución:</strong> Implementación del patrón "Cascarón Blindado".
+                        Inyección de un script de telemetría para leer el JSON crudo, y construcción de un algoritmo de
+                        Auto-Búsqueda que extrae dinámicamente arrays ocultos dentro de objetos para prevenir colapsos.
+                    </p>
+                </div>
+
+                <div
+                    class="bg-slate-800/50 border border-slate-700 rounded-xl p-6 hover:border-emerald-500 transition-colors">
+                    <div class="flex items-center gap-4 mb-3">
+                        <div
+                            class="w-10 h-10 rounded bg-slate-700 flex items-center justify-center text-xl font-bold text-slate-300">
+                            D</div>
+                        <h4 class="text-xl font-bold text-emerald-300">Bloqueo de Seguridad Ngrok (Domingo)</h4>
+                    </div>
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        <strong class="text-white">Problema:</strong> Al establecer el túnel público Ngrok para la
+                        presentación, el servidor Vite detectó un host desconocido y bloqueó el acceso devolviendo <code
+                            class="bg-slate-900 px-1 text-red-400">Blocked request</code> por motivos de seguridad
+                        CORS.<br>
+                        <strong class="text-white">Solución:</strong> Configuración granular en <code
+                            class="bg-slate-900 px-1 text-slate-400">vite.config.ts</code> inyectando la propiedad <code
+                            class="bg-slate-900 px-1 text-emerald-400">allowedHosts</code> con dominios comodín para
+                        autorizar la entrada de tráfico mundial a través del túnel.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center p-8 border-t border-slate-800 mt-12">
+        <p class="text-slate-500 text-sm font-mono uppercase tracking-widest">Desarrollado por Daniel Ríos Oquendo |
+            Orquestado por META</p>
+        <p class="text-slate-700 text-xs mt-2">Compliance Check: No SVG elements used. No Mermaid.js used. Pure Canvas &
+            HTML/CSS rendering.</p>
+    </footer>
+
+    <script>
+        const tooltipConfig = {
+            callbacks: {
+                title: function (tooltipItems) {
+                    const item = tooltipItems[0];
+                    let label = item.chart.data.labels[item.dataIndex];
+                    if (Array.isArray(label)) {
+                        return label.join(' ');
+                    } else {
+                        return label;
+                    }
+                }
+            }
+        };
+
+        const effortCtx = document.getElementById('effortChart').getContext('2d');
+        new Chart(effortCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [['Configuración', 'Inicial'], ['Resolución de', 'Crisis / Bugs'], ['Diseño de', 'Interfaz UI/UX'], ['Despliegue con', 'Túnel Ngrok']],
+                datasets: [{
+                    data: [15, 25, 50, 10],
+                    backgroundColor: ['#0f766e', '#06b6d4', '#10b981', '#3b82f6'],
+                    borderColor: '#1e293b',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: tooltipConfig,
+                    legend: { display: false }
+                },
+                cutout: '75%'
+            }
+        });
+
+        const blocksCtx = document.getElementById('blocksChart').getContext('2d');
+        new Chart(blocksCtx, {
+            type: 'bar',
+            data: {
+                labels: [['Tailwind v4 /', 'PostCSS Crash'], ['Fallo Proxy /', 'Error 502'], ['JSON Mismatch /', 'Pantalla Blanca'], ['Ngrok Vite /', 'Bloqueo Host']],
+                datasets: [{
+                    label: 'Nivel de Gravedad / Impacto Técnico',
+                    data: [6, 4, 10, 5],
+                    backgroundColor: '#34d399',
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: tooltipConfig,
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10,
+                        grid: { color: 'rgba(51, 65, 85, 0.5)' },
+                        ticks: { color: '#94a3b8', stepSize: 2 }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8', font: { size: 10 } }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

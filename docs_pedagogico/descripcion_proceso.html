@@ -1,0 +1,245 @@
+<!-- 
+  PLAN NARRATIVO & ESTRUCTURA:
+  1. Introducción: "El Punto de Partida" - La incertidumbre del viernes.
+  2. Sección de Datos: "El Reparto de Energía" - Gráfico de dona con Chart.js sobre el tiempo invertido.
+  3. Sección de Hitos: "La Curva de Aprendizaje" - Gráfico de líneas sobre la confianza vs. dificultad.
+  4. Sección de Proceso: "La Anatomía de la Solución" - Diagrama de bloques con Tailwind (NO SVG).
+  5. Conclusión: "Listos para el Lunes" - Resumen narrativo.
+
+  REQUISITOS TÉCNICOS:
+  - Chart.js con label wrapping (16 chars) y tooltip config.
+  - Tailwind para layout y tarjetas Material Design.
+  - NO SVG / NO MERMAID.
+  - Paleta: Vibrant Emerald & Cyan sobre Slate-900.
+-->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Crónica del Baloto: Infografía</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        .card {
+            background-color: #1e293b;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+            padding: 1.5rem;
+        }
+
+        .emerald-gradient {
+            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+        }
+    </style>
+</head>
+
+<body class="text-slate-200">
+
+    <!-- HERO SECTION -->
+    <header class="emerald-gradient py-16 px-6 text-center shadow-2xl">
+        <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">La Crónica del Baloto</h1>
+        <p class="text-lg md:text-xl text-emerald-50 opacity-90 max-w-2xl mx-auto">
+            Una historia de 48 horas: De una carpeta vacía a una plataforma de IA de nivel corporativo.
+        </p>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-6 py-12 space-y-16">
+
+        <!-- INTRODUCCIÓN -->
+        <section class="space-y-6">
+            <h2 class="text-3xl font-bold text-emerald-400 border-l-4 border-emerald-400 pl-4">01. El Punto de Partida
+            </h2>
+            <p class="text-slate-400 leading-relaxed text-lg">
+                El viernes comenzó con una pantalla en blanco y una sensación de incertidumbre. Teníamos los datos, pero
+                no el "vehículo" para mostrarlos. Esta sección describe cómo decidimos dividir el fin de semana para
+                conquistar cada obstáculo técnico sin perder el enfoque en el diseño.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="card">
+                    <h3 class="text-xl font-bold text-white mb-4 text-center">Distribución del Esfuerzo Diario</h3>
+                    <div class="chart-container">
+                        <canvas id="effortDoughnut"></canvas>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center font-bold text-white shrink-0">
+                            1</div>
+                        <p><span class="font-bold text-emerald-400">Viernes:</span> Cimentación. Instalamos React, Vite
+                            y Tailwind. Resolvimos el primer choque de dependencias.</p>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center font-bold text-white shrink-0">
+                            2</div>
+                        <p><span class="font-bold text-emerald-400">Sábado:</span> Conexión. Creamos el "puente" (proxy)
+                            para que el frontend hablara con la IA.</p>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center font-bold text-white shrink-0">
+                            3</div>
+                        <p><span class="font-bold text-emerald-400">Domingo:</span> Pulido. Renderizamos las balotas y
+                            abrimos el túnel público con Ngrok.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EMOTIONAL JOURNEY -->
+        <section class="space-y-6">
+            <h2 class="text-3xl font-bold text-cyan-400 border-l-4 border-cyan-400 pl-4">02. El Viaje del Aprendizaje
+            </h2>
+            <p class="text-slate-400 leading-relaxed text-lg">
+                No fue un camino lineal. Cada error de terminal era una oportunidad de aprender arquitectura. Aquí
+                visualizamos cómo fluctuó la confianza del desarrollador frente a los retos técnicos encontrados durante
+                el sprint.
+            </p>
+            <div class="card md:col-span-2">
+                <h3 class="text-xl font-bold text-white mb-6 text-center">Curva de Confianza vs. Desafíos</h3>
+                <div class="chart-container h-80">
+                    <canvas id="learningLine"></canvas>
+                </div>
+                <p class="text-xs text-slate-500 mt-6 italic text-center">
+                    * Los picos representan el "Aha! moment" tras resolver errores de Proxy y JSON Mismatch.
+                </p>
+            </div>
+        </section>
+
+        <!-- DIAGRAMA DE ARQUITECTURA -->
+        <section class="space-y-8">
+            <h2 class="text-3xl font-bold text-emerald-400 border-l-4 border-emerald-400 pl-4">03. El Puente Invisible
+            </h2>
+            <p class="text-slate-400 leading-relaxed text-lg">
+                La clave del éxito fue separar "La Cocina" (Backend) del "Comedor" (Frontend). Usamos un lenguaje
+                universal (JSON) para que se comunicaran sin romperse.
+            </p>
+            <div class="flex flex-col md:flex-row items-center justify-around gap-8 py-8">
+                <div class="card w-full md:w-64 text-center border-2 border-emerald-500/30">
+                    <div class="text-3xl mb-2">🐍</div>
+                    <h4 class="font-bold text-emerald-400">BACKEND</h4>
+                    <p class="text-xs text-slate-500">Python / FastAPI</p>
+                    <p class="text-sm mt-2">La "Cocina" donde se procesa el Machine Learning.</p>
+                </div>
+                <div class="hidden md:block text-emerald-500 text-4xl">➔</div>
+                <div class="card w-full md:w-64 text-center bg-emerald-500/10 border-2 border-emerald-500">
+                    <div class="text-3xl mb-2">📜</div>
+                    <h4 class="font-bold text-emerald-400">API (JSON)</h4>
+                    <p class="text-xs text-slate-500">El "Mesero"</p>
+                    <p class="text-sm mt-2">Transporta el pedido de loterías y predicciones.</p>
+                </div>
+                <div class="hidden md:block text-emerald-500 text-4xl">➔</div>
+                <div class="card w-full md:w-64 text-center border-2 border-emerald-500/30">
+                    <div class="text-3xl mb-2">⚛️</div>
+                    <h4 class="font-bold text-emerald-400">FRONTEND</h4>
+                    <p class="text-xs text-slate-500">React / Tailwind</p>
+                    <p class="text-sm mt-2">El "Comedor" donde el usuario ve las balotas reales.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONCLUSIÓN -->
+        <section class="card emerald-gradient text-white p-12 text-center">
+            <h2 class="text-4xl font-bold mb-6 italic">"El Lunes de Victoria"</h2>
+            <p class="text-xl opacity-90 max-w-3xl mx-auto leading-relaxed">
+                Daniel, hoy entras a clase con un sistema que no solo muestra números, sino que tiene alma. Has
+                aprendido a orquestar el caos de las terminales y a convertirlo en una experiencia visual premium.
+                ¡Felicidades, Arquitecto!
+            </p>
+        </section>
+
+    </main>
+
+    <script>
+        // Configuración de Tooltips para Chart.js
+        const tooltipOptions = {
+            callbacks: {
+                title: function (tooltipItems) {
+                    const item = tooltipItems[0];
+                    let label = item.chart.data.labels[item.dataIndex];
+                    return Array.isArray(label) ? label.join(' ') : label;
+                }
+            }
+        };
+
+        // Gráfico de Dona: Esfuerzo
+        const effortCtx = document.getElementById('effortDoughnut').getContext('2d');
+        new Chart(effortCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [['Infraestructura', 'Vite y Tailwind'], ['Puente API y', 'Config Proxy'], ['Diseño Visual', 'de Balotas'], ['Túnel Público', 'con Ngrok']],
+                datasets: [{
+                    data: [20, 30, 40, 10],
+                    backgroundColor: ['#064e3b', '#0d9488', '#10b981', '#22d3ee'],
+                    borderWidth: 0,
+                    hoverOffset: 15
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: tooltipOptions
+                },
+                cutout: '70%'
+            }
+        });
+
+        // Gráfico de Líneas: Aprendizaje
+        const learningCtx = document.getElementById('learningLine').getContext('2d');
+        new Chart(learningCtx, {
+            type: 'line',
+            data: {
+                labels: ['Viernes Mañana', 'Viernes Noche', 'Sábado Mediodía', 'Sábado Noche', 'Domingo Tarde', 'Domingo Cierre'],
+                datasets: [{
+                    label: 'Nivel de Confianza',
+                    data: [40, 30, 60, 50, 90, 100],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#fff',
+                    pointRadius: 6
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: tooltipOptions
+                },
+                scales: {
+                    y: { display: false },
+                    x: { ticks: { color: '#64748b' }, grid: { display: false } }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
