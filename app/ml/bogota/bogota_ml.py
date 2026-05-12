@@ -146,11 +146,11 @@ class BogotaModel(BaseModel):
         Genera predicción para el próximo sorteo.
 
         Utiliza el último sorteo del histórico para proyectar el siguiente,
-        manteniendo el año/mes más reciente. Redondea los valores predichos
-        y los retorna como [NUMERO, SERIE].
+        manteniendo el año/mes más reciente. Devuelve cuatro dígitos
+        principales y la serie como entero, conforme al contrato de API.
 
         Returns:
-            Lista con dos enteros: [número_predicho, serie_predicha]
+            Lista con cinco enteros: [d1, d2, d3, d4, serie_predicha]
 
         Raises:
             RuntimeError: si el modelo no ha sido entrenado (``train()``
@@ -172,7 +172,10 @@ class BogotaModel(BaseModel):
 
         # Predicción y redondeo
         prediccion = self.model.predict(proximo_scaled)[0]
-        numero_predicho = int(abs(prediccion[0]))
-        serie_predicha = int(abs(prediccion[1]))
+        numero_predicho = int(abs(prediccion[0])) % 10000
+        serie_predicha = int(abs(prediccion[1])) % 1000
 
-        return [numero_predicho, serie_predicha]
+        numero_str = str(numero_predicho).zfill(4)
+        main_digits = [int(d) for d in numero_str]
+
+        return main_digits + [serie_predicha]
