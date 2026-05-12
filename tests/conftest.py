@@ -1,6 +1,10 @@
 """Define fixtures compartidas por las pruebas unitarias e integración."""
 
 import pytest
+import pytest_asyncio
+from httpx import AsyncClient, ASGITransport
+
+from app.main import app
 from app.ml.base_model import BaseModel
 
 
@@ -34,6 +38,15 @@ class ConcreteTestModel(BaseModel):
     def predict(self) -> list[int]:
         """Devuelve una predicción fija para validar el tipo de retorno."""
         return [1, 2, 3]
+
+
+@pytest_asyncio.fixture
+async def client():
+    """Entrega un cliente HTTP asíncrono conectado a la app FastAPI."""
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        yield ac
 
 
 @pytest.fixture

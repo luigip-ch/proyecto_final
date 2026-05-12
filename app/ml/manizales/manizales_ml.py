@@ -78,6 +78,13 @@ class ManizalesModel(BaseModel):
         for i in range(4):
             df_mayor[f'd{i}'] = df_mayor['billete_full'].str[i].astype(int)
 
+        # Asegurar la serie como entero
+        df_mayor['Numero serie ganadora'] = (
+            pd.to_numeric(df_mayor['Numero serie ganadora'], errors='coerce')
+            .fillna(0)
+            .astype(int)
+        )
+
         # Extraer características temporales
         df_mayor['day'] = df_mayor['Fecha del Sorteo'].dt.day
         df_mayor['month'] = df_mayor['Fecha del Sorteo'].dt.month
@@ -125,7 +132,13 @@ class ManizalesModel(BaseModel):
             raise RuntimeError("Debe llamar a train() antes de predict()")
 
         now = datetime.now()
-        features = [[now.day, now.month, now.weekday()]]
+        features = pd.DataFrame(
+            {
+                'day': [now.day],
+                'month': [now.month],
+                'weekday': [now.weekday()],
+            }
+        )
         pred = self.model.predict(features)[0]
 
         # Normalizar dígitos
