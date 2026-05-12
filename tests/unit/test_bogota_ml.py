@@ -226,34 +226,34 @@ class TestBogotaModelPredict:
         result = model_with_data.predict()
         assert isinstance(result, list)
 
-    def test_predict_returns_two_elements(self, model_with_data):
-        """Verifica que retorne [numero, serie]."""
+    def test_predict_returns_five_elements(self, model_with_data):
+        """Verifica que retorne cuatro dígitos y una serie."""
         model_with_data.load_data()
         model_with_data.train()
         result = model_with_data.predict()
-        assert len(result) == 2
+        assert len(result) == 5
 
     def test_predict_returns_integers(self, model_with_data):
-        """Verifica que ambos elementos sean enteros."""
+        """Verifica que todos los valores devueltos sean enteros."""
         model_with_data.load_data()
         model_with_data.train()
-        numero, serie = model_with_data.predict()
-        assert isinstance(numero, (int, np.integer))
-        assert isinstance(serie, (int, np.integer))
+        result = model_with_data.predict()
+        assert all(isinstance(value, (int, np.integer)) for value in result)
 
-    def test_predict_numero_is_four_digits(self, model_with_data):
-        """Verifica que el número predicho sea razonable (0–9999)."""
+    def test_predict_main_digits_are_single_digits(self, model_with_data):
+        """Verifica que los cuatro primeros valores sean dígitos individuales."""
         model_with_data.load_data()
         model_with_data.train()
-        numero, _ = model_with_data.predict()
-        assert 0 <= numero <= 9999
+        result = model_with_data.predict()
+        assert all(0 <= digit <= 9 for digit in result[:4])
+        assert 0 <= result[4] <= 999
 
     def test_predict_serie_is_up_to_three_digits(self, model_with_data):
         """Verifica que la serie sea hasta 3 dígitos (0–999)."""
         model_with_data.load_data()
         model_with_data.train()
-        _, serie = model_with_data.predict()
-        assert 0 <= serie <= 999
+        result = model_with_data.predict()
+        assert 0 <= result[4] <= 999
 
     def test_predict_requires_train_first(self, model_with_data):
         """Verifica que predecir sin entrenar produzca ``RuntimeError``."""
@@ -278,7 +278,8 @@ class TestBogotaModelPredict:
         max_sorteo = int(model_with_data.df['SORTEO'].max())
         # Debe funcionar correctamente usando max_sorteo + 1
         result = model_with_data.predict()
-        assert len(result) == 2
+        assert len(result) == 5
+        assert all(isinstance(value, (int, np.integer)) for value in result)
 
 
 @pytest.mark.unit
@@ -292,7 +293,7 @@ class TestBogotaModelCycleIntegration:
         result = model_with_data.predict()
         
         assert result is not None
-        assert len(result) == 2
+        assert len(result) == 5
         assert all(isinstance(x, (int, np.integer)) for x in result)
 
     def test_cycle_with_default_path_would_work(self):
