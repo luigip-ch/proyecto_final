@@ -93,7 +93,7 @@ function App() {
             {/* 
               LA MAGIA ESTÁ AQUÍ: 
               Quitamos el 'inline-block' y ponemos 'w-full max-w-[600px]'.
-              Esto obliga a la caja a medir exactamente 550px en PC, 
+              Esto obliga a la caja a medir exactamente 600px en PC, 
               pero le permite encogerse fluidamente en celulares.
             */}
             <div className="relative w-full max-w-[600px]">
