@@ -92,15 +92,15 @@ function App() {
           <div className="flex justify-center mb-8 mt-4 px-4">
             {/* 
               LA MAGIA ESTÁ AQUÍ: 
-              Quitamos el 'inline-block' y ponemos 'w-full max-w-[650px]'.
-              Esto obliga a la caja a medir exactamente 650px en PC, 
+              Quitamos el 'inline-block' y ponemos 'w-full max-w-[550px]'.
+              Esto obliga a la caja a medir exactamente 550px en PC, 
               pero le permite encogerse fluidamente en celulares.
             */}
-            <div className="relative w-full max-w-[650px]">
+            <div className="relative w-full max-w-[550px]">
               {/* Resplandor tecnológico de fondo adaptado a tu logo */}
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-500 rounded-full blur-3xl opacity-15 animate-pulse"></div>
 
-              {/* La imagen simplemente ocupa el 100% de la caja de 650px */}
+              {/* La imagen simplemente ocupa el 100% de la caja de 550px */}
               <img
                 src="/loterias_logo.svg"
                 alt="LOTERIAS Logo Oficial"
